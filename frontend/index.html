@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Mini Crossword</title>
+    <title>Karim's Mini Crossword</title>
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
     <!-- Header -->
     <header class="header">
         <div class="header-content">
-            <a href="/" class="logo">Mini Crossword</a>
+            <a href="/" class="logo">Karim's Mini Crossword</a>
             <nav class="nav-links" id="nav-links">
                 <a href="#" data-page="play">Play</a>
                 <a href="#" data-page="leaderboard">Leaderboard</a>
@@ -19,6 +19,14 @@
                 <a href="#" data-page="login" id="nav-login">Login</a>
                 <a href="#" data-page="register" id="nav-register">Register</a>
                 <button class="btn btn-secondary hidden" id="nav-logout">Logout</button>
+
+                <!-- Theme Picker -->
+                <div class="theme-picker">
+                    <button class="theme-btn active" data-theme="default" title="Classic"></button>
+                    <button class="theme-btn" data-theme="plants" title="Plants">🌿</button>
+                    <button class="theme-btn" data-theme="ocean" title="Ocean">🌊</button>
+                    <button class="theme-btn" data-theme="football" title="Football">🏈</button>
+                </div>
             </nav>
         </div>
     </header>
@@ -40,14 +48,25 @@
                             <div class="timer" id="timer">0:00</div>
                         </div>
 
-                        <div class="crossword-grid" id="crossword-grid">
-                            <!-- Grid cells will be generated here -->
+                        <div class="crossword-wrapper">
+                            <!-- Start Screen Overlay -->
+                            <div class="start-screen" id="start-screen">
+                                <div class="start-icon">🧩</div>
+                                <div class="start-title">Ready to Play?</div>
+                                <div class="start-subtitle">Click start to reveal the puzzle<br>and begin the timer</div>
+                                <button class="btn btn-primary btn-start" id="btn-start">Start Game</button>
+                            </div>
+
+                            <div class="crossword-grid blurred" id="crossword-grid">
+                                <!-- Grid cells will be generated here -->
+                            </div>
                         </div>
 
                         <div class="game-controls">
-                            <button class="btn btn-secondary" id="btn-check">Check</button>
-                            <button class="btn btn-secondary" id="btn-reveal">Reveal</button>
-                            <button class="btn btn-secondary" id="btn-clear">Clear</button>
+                            <button class="btn btn-primary" id="btn-hint" disabled>💡 Hint</button>
+                            <button class="btn btn-success" id="btn-check" disabled>✓ Check</button>
+                            <button class="btn btn-warning" id="btn-reveal" disabled>👁 Reveal</button>
+                            <button class="btn btn-secondary" id="btn-clear" disabled>Clear</button>
                         </div>
                     </div>
                 </div>
@@ -254,13 +273,13 @@
     <div class="modal-overlay" id="completion-modal">
         <div class="modal">
             <div class="modal-header">
-                <h3 class="modal-title">Congratulations!</h3>
+                <h3 class="modal-title" id="completion-modal-title">Congratulations!</h3>
                 <button class="modal-close" id="close-completion">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="completion-screen">
-                    <div class="completion-icon">🎉</div>
-                    <div class="completion-title">Puzzle Complete!</div>
+                    <div class="completion-icon" id="completion-icon">🎉</div>
+                    <div class="completion-title" id="completion-title-text">Puzzle Complete!</div>
                     <div class="completion-time" id="completion-time">0:00</div>
                     <div class="completion-rank" id="completion-rank"></div>
                     <div class="share-text" id="share-text"></div>

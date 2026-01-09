@@ -13,11 +13,12 @@ from app.models.user import User
 from app.utils.security import hash_password
 
 
-# Sample puzzles - 12 puzzles of varying sizes (5x5, 6x6, 7x7)
+# Large puzzle set - 21 puzzles (3 weeks worth) with unique words
+# Each puzzle has distinct vocabulary to avoid repetition within a week
 PUZZLES = [
-    # Puzzle 1: 5x5
+    # Week 1 - Day 1: 5x5 Easy
     {
-        "title": "Morning Brew",
+        "title": "Morning Start",
         "size": 5,
         "difficulty": "easy",
         "grid": [
@@ -28,256 +29,26 @@ PUZZLES = [
             [" ", " ", " ", " ", " "],
         ],
         "solution": [
-            ["C", "O", "F", "F", "E"],
-            ["A", ".", "O", ".", "A"],
-            ["B", "R", "E", "A", "D"],
-            ["S", ".", "G", ".", "R"],
-            ["T", "E", "A", "S", "T"],
+            ["C", "A", "F", "E", "S"],
+            ["A", ".", "O", ".", "T"],
+            ["B", "R", "E", "A", "E"],
+            ["S", ".", "A", ".", "A"],
+            ["T", "E", "M", "P", "S"],
         ],
         "clues_across": [
-            {"number": 1, "clue": "Morning beverage with caffeine", "length": 5, "row": 0, "col": 0},
-            {"number": 3, "clue": "Sliced for toast", "length": 5, "row": 2, "col": 0},
-            {"number": 5, "clue": "Breakfast beverage (or crispy bread)", "length": 5, "row": 4, "col": 0},
+            {"number": 1, "clue": "Coffee shops", "length": 5, "row": 0, "col": 0},
+            {"number": 3, "clue": "Region or zone", "length": 5, "row": 2, "col": 0},
+            {"number": 5, "clue": "Temporary workers (abbr)", "length": 5, "row": 4, "col": 0},
         ],
         "clues_down": [
-            {"number": 1, "clue": "Taxi transport", "length": 5, "row": 0, "col": 0},
+            {"number": 1, "clue": "Taxi vehicles", "length": 5, "row": 0, "col": 0},
             {"number": 2, "clue": "Thick mist", "length": 5, "row": 0, "col": 2},
-            {"number": 4, "clue": "Start the day ___", "length": 5, "row": 0, "col": 4},
+            {"number": 4, "clue": "Meat cuts", "length": 5, "row": 0, "col": 4},
         ],
     },
-    # Puzzle 2: 5x5
+    # Week 1 - Day 2: 5x5 Easy
     {
-        "title": "Pet Parade",
-        "size": 5,
-        "difficulty": "easy",
-        "grid": [
-            [" ", " ", " ", " ", " "],
-            [" ", ".", ".", ".", " "],
-            [" ", " ", " ", " ", " "],
-            [" ", ".", ".", ".", " "],
-            [" ", " ", " ", " ", " "],
-        ],
-        "solution": [
-            ["C", "A", "T", "S", "O"],
-            ["A", ".", ".", ".", "W"],
-            ["P", "A", "W", "E", "L"],
-            ["E", ".", ".", ".", "S"],
-            ["D", "O", "G", "S", "Y"],
-        ],
-        "clues_across": [
-            {"number": 1, "clue": "Feline pets, plus a direction", "length": 5, "row": 0, "col": 0},
-            {"number": 3, "clue": "Animal foot + proper name", "length": 5, "row": 2, "col": 0},
-            {"number": 4, "clue": "Canine pets + affirmative", "length": 5, "row": 4, "col": 0},
-        ],
-        "clues_down": [
-            {"number": 1, "clue": "Superhero outfit accessory", "length": 5, "row": 0, "col": 0},
-            {"number": 2, "clue": "Night birds", "length": 5, "row": 0, "col": 4},
-        ],
-    },
-    # Puzzle 3: 5x5
-    {
-        "title": "Color Mix",
-        "size": 5,
-        "difficulty": "easy",
-        "grid": [
-            [" ", " ", " ", " ", " "],
-            [" ", ".", " ", ".", " "],
-            [" ", " ", " ", " ", " "],
-            [" ", ".", " ", ".", " "],
-            [" ", " ", " ", " ", " "],
-        ],
-        "solution": [
-            ["B", "L", "U", "E", "S"],
-            ["E", ".", "N", ".", "H"],
-            ["G", "R", "E", "E", "N"],
-            ["A", ".", "A", ".", "Y"],
-            ["N", "O", "R", "T", "H"],
-        ],
-        "clues_across": [
-            {"number": 1, "clue": "Sad music genre", "length": 5, "row": 0, "col": 0},
-            {"number": 3, "clue": "Grass color", "length": 5, "row": 2, "col": 0},
-            {"number": 5, "clue": "Cardinal direction", "length": 5, "row": 4, "col": 0},
-        ],
-        "clues_down": [
-            {"number": 1, "clue": "Start (a journey)", "length": 5, "row": 0, "col": 0},
-            {"number": 2, "clue": "Without clothes", "length": 5, "row": 0, "col": 2},
-            {"number": 4, "clue": "Bright and sunny", "length": 5, "row": 0, "col": 4},
-        ],
-    },
-    # Puzzle 4: 6x6
-    {
-        "title": "Kitchen Tools",
-        "size": 6,
-        "difficulty": "medium",
-        "grid": [
-            [" ", " ", " ", " ", " ", " "],
-            [" ", ".", " ", ".", " ", " "],
-            [" ", " ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " ", " "],
-            [" ", " ", ".", " ", ".", " "],
-            [" ", " ", " ", " ", " ", " "],
-        ],
-        "solution": [
-            ["S", "P", "O", "O", "N", "S"],
-            ["P", ".", "V", ".", "I", "T"],
-            ["A", "R", "E", "N", "A", "E"],
-            ["T", "E", "N", "D", "E", "R"],
-            ["U", "D", ".", "S", ".", "E"],
-            ["L", "A", "I", "T", "Y", "S"],
-        ],
-        "clues_across": [
-            {"number": 1, "clue": "Soup utensils", "length": 6, "row": 0, "col": 0},
-            {"number": 3, "clue": "Sports stadium", "length": 6, "row": 2, "col": 0},
-            {"number": 4, "clue": "Soft and gentle", "length": 6, "row": 3, "col": 0},
-            {"number": 6, "clue": "Non-clergy members", "length": 6, "row": 5, "col": 0},
-        ],
-        "clues_down": [
-            {"number": 1, "clue": "Kitchen tool that flips", "length": 6, "row": 0, "col": 0},
-            {"number": 2, "clue": "Cooked in the oven", "length": 6, "row": 0, "col": 2},
-            {"number": 5, "clue": "Trees or forests", "length": 6, "row": 0, "col": 5},
-        ],
-    },
-    # Puzzle 5: 6x6
-    {
-        "title": "Music Time",
-        "size": 6,
-        "difficulty": "medium",
-        "grid": [
-            [" ", " ", " ", " ", " ", " "],
-            [" ", ".", ".", " ", ".", " "],
-            [" ", " ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " ", " "],
-            [" ", ".", " ", ".", ".", " "],
-            [" ", " ", " ", " ", " ", " "],
-        ],
-        "solution": [
-            ["P", "I", "A", "N", "O", "S"],
-            ["L", ".", ".", "O", ".", "O"],
-            ["A", "L", "B", "U", "M", "S"],
-            ["Y", "U", "N", "D", "E", "R"],
-            ["S", ".", "O", ".", ".", "K"],
-            ["G", "U", "I", "T", "A", "R"],
-        ],
-        "clues_across": [
-            {"number": 1, "clue": "Keyboard instruments", "length": 6, "row": 0, "col": 0},
-            {"number": 3, "clue": "Music collections", "length": 6, "row": 2, "col": 0},
-            {"number": 4, "clue": "Beneath", "length": 6, "row": 3, "col": 0},
-            {"number": 6, "clue": "Six-stringed instrument", "length": 6, "row": 5, "col": 0},
-        ],
-        "clues_down": [
-            {"number": 1, "clue": "Drama performances", "length": 6, "row": 0, "col": 0},
-            {"number": 2, "clue": "Loud + rhythm = ?", "length": 6, "row": 0, "col": 3},
-            {"number": 5, "clue": "Drenched", "length": 6, "row": 0, "col": 5},
-        ],
-    },
-    # Puzzle 6: 6x6
-    {
-        "title": "Weather Watch",
-        "size": 6,
-        "difficulty": "medium",
-        "grid": [
-            [" ", " ", " ", " ", " ", " "],
-            [" ", " ", ".", " ", " ", "." ],
-            [" ", " ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " ", " "],
-            [".", " ", " ", ".", " ", " "],
-            [" ", " ", " ", " ", " ", " "],
-        ],
-        "solution": [
-            ["S", "T", "O", "R", "M", "Y"],
-            ["U", "A", ".", "A", "O", "."],
-            ["N", "L", "I", "N", "K", "S"],
-            ["N", "E", "W", "E", "Y", "O"],
-            [".", "N", "I", ".", "S", "A"],
-            ["C", "T", "N", "D", "E", "K"],
-        ],
-        "clues_across": [
-            {"number": 1, "clue": "Turbulent weather", "length": 6, "row": 0, "col": 0},
-            {"number": 3, "clue": "Golf course connections", "length": 6, "row": 2, "col": 0},
-            {"number": 4, "clue": "Fresh + positive", "length": 6, "row": 3, "col": 0},
-            {"number": 6, "clue": "Clink + D sounds like?", "length": 6, "row": 5, "col": 0},
-        ],
-        "clues_down": [
-            {"number": 1, "clue": "Bright and happy", "length": 4, "row": 0, "col": 0},
-            {"number": 2, "clue": "Gift, ability", "length": 6, "row": 0, "col": 1},
-            {"number": 5, "clue": "Primate + letters", "length": 6, "row": 0, "col": 4},
-        ],
-    },
-    # Puzzle 7: 7x7
-    {
-        "title": "World Travel",
-        "size": 7,
-        "difficulty": "hard",
-        "grid": [
-            [" ", " ", " ", " ", " ", " ", " "],
-            [" ", ".", " ", ".", " ", ".", " "],
-            [" ", " ", " ", " ", " ", " ", " "],
-            [" ", ".", " ", ".", " ", ".", " "],
-            [" ", " ", " ", " ", " ", " ", " "],
-            [" ", ".", " ", ".", " ", ".", " "],
-            [" ", " ", " ", " ", " ", " ", " "],
-        ],
-        "solution": [
-            ["F", "R", "A", "N", "C", "E", "S"],
-            ["L", ".", "R", ".", "H", ".", "P"],
-            ["I", "T", "A", "L", "I", "N", "A"],
-            ["G", ".", "B", ".", "N", ".", "I"],
-            ["H", "E", "I", "R", "E", "D", "N"],
-            ["T", ".", "A", ".", "S", ".", "S"],
-            ["S", "W", "N", "A", "E", "R", "O"],
-        ],
-        "clues_across": [
-            {"number": 1, "clue": "European country + name", "length": 7, "row": 0, "col": 0},
-            {"number": 3, "clue": "Mediterranean country + word", "length": 7, "row": 2, "col": 0},
-            {"number": 5, "clue": "Received inheritance", "length": 7, "row": 4, "col": 0},
-            {"number": 7, "clue": "Swan + cookie brand", "length": 7, "row": 6, "col": 0},
-        ],
-        "clues_down": [
-            {"number": 1, "clue": "Airplane journeys", "length": 7, "row": 0, "col": 0},
-            {"number": 2, "clue": "Middle Eastern + countries", "length": 7, "row": 0, "col": 2},
-            {"number": 4, "clue": "Asia country + letters", "length": 7, "row": 0, "col": 4},
-            {"number": 6, "clue": "European country", "length": 7, "row": 0, "col": 6},
-        ],
-    },
-    # Puzzle 8: 7x7
-    {
-        "title": "Food Fest",
-        "size": 7,
-        "difficulty": "hard",
-        "grid": [
-            [" ", " ", " ", " ", " ", " ", " "],
-            [" ", ".", " ", " ", " ", ".", " "],
-            [" ", " ", " ", " ", " ", " ", " "],
-            [" ", " ", " ", ".", " ", " ", " "],
-            [" ", " ", " ", " ", " ", " ", " "],
-            [" ", ".", " ", " ", " ", ".", " "],
-            [" ", " ", " ", " ", " ", " ", " "],
-        ],
-        "solution": [
-            ["P", "A", "S", "T", "A", "S", "Y"],
-            ["I", ".", "A", "O", "P", ".", "O"],
-            ["Z", "E", "L", "M", "P", "R", "G"],
-            ["Z", "A", "A", ".", "L", "I", "U"],
-            ["A", "T", "M", "E", "E", "C", "R"],
-            ["S", ".", "O", "A", "S", ".", "T"],
-            ["B", "R", "N", "T", "Y", "E", "S"],
-        ],
-        "clues_across": [
-            {"number": 1, "clue": "Italian noodle dishes + letter", "length": 7, "row": 0, "col": 0},
-            {"number": 3, "clue": "Name + cooking style", "length": 7, "row": 2, "col": 0},
-            {"number": 5, "clue": "Person who eats + letters", "length": 7, "row": 4, "col": 0},
-            {"number": 7, "clue": "Bread + extra letters", "length": 7, "row": 6, "col": 0},
-        ],
-        "clues_down": [
-            {"number": 1, "clue": "Flat Italian pies", "length": 7, "row": 0, "col": 0},
-            {"number": 2, "clue": "Spice + seasoning", "length": 7, "row": 0, "col": 2},
-            {"number": 4, "clue": "Fruit + extras", "length": 7, "row": 0, "col": 4},
-            {"number": 6, "clue": "Dairy product", "length": 7, "row": 0, "col": 6},
-        ],
-    },
-    # Puzzle 9: 5x5
-    {
-        "title": "Animal Farm",
+        "title": "Farm Life",
         "size": 5,
         "difficulty": "easy",
         "grid": [
@@ -295,19 +66,19 @@ PUZZLES = [
             ["S", "H", "E", "E", "P"],
         ],
         "clues_across": [
-            {"number": 1, "clue": "Farm animal for riding", "length": 5, "row": 0, "col": 0},
-            {"number": 3, "clue": "A loop knot", "length": 5, "row": 2, "col": 0},
-            {"number": 5, "clue": "Wool-producing animals", "length": 5, "row": 4, "col": 0},
+            {"number": 1, "clue": "Riding animal", "length": 5, "row": 0, "col": 0},
+            {"number": 3, "clue": "Loop knot", "length": 5, "row": 2, "col": 0},
+            {"number": 5, "clue": "Wool animals", "length": 5, "row": 4, "col": 0},
         ],
         "clues_down": [
-            {"number": 1, "clue": "Female chickens", "length": 5, "row": 0, "col": 0},
-            {"number": 2, "clue": "Bedroom space", "length": 5, "row": 0, "col": 2},
-            {"number": 4, "clue": "Female sheep (plural)", "length": 5, "row": 0, "col": 4},
+            {"number": 1, "clue": "Egg layers", "length": 5, "row": 0, "col": 0},
+            {"number": 2, "clue": "Sleeping space", "length": 5, "row": 0, "col": 2},
+            {"number": 4, "clue": "Female sheep", "length": 5, "row": 0, "col": 4},
         ],
     },
-    # Puzzle 10: 5x5
+    # Week 1 - Day 3: 5x5 Easy
     {
-        "title": "Sports Day",
+        "title": "Dinner Time",
         "size": 5,
         "difficulty": "easy",
         "grid": [
@@ -318,59 +89,122 @@ PUZZLES = [
             [" ", " ", " ", " ", " "],
         ],
         "solution": [
-            ["T", "E", "N", "I", "S"],
-            ["E", ".", "I", ".", "W"],
-            ["A", "R", "G", "U", "E"],
-            ["M", ".", "H", ".", "E"],
-            ["S", "O", "T", "T", "O"],
+            ["B", "R", "E", "A", "D"],
+            ["E", ".", "A", ".", "I"],
+            ["E", "A", "T", "E", "N"],
+            ["F", ".", "S", ".", "E"],
+            ["S", "T", "Y", "L", "E"],
         ],
         "clues_across": [
-            {"number": 1, "clue": "Racket sport (variant spelling)", "length": 5, "row": 0, "col": 0},
-            {"number": 3, "clue": "Dispute verbally", "length": 5, "row": 2, "col": 0},
-            {"number": 5, "clue": "Under (Italian)", "length": 5, "row": 4, "col": 0},
+            {"number": 1, "clue": "Toast base", "length": 5, "row": 0, "col": 0},
+            {"number": 3, "clue": "Consumed", "length": 5, "row": 2, "col": 0},
+            {"number": 5, "clue": "Fashion", "length": 5, "row": 4, "col": 0},
         ],
         "clues_down": [
-            {"number": 1, "clue": "Sports group", "length": 5, "row": 0, "col": 0},
-            {"number": 2, "clue": "Evening hours", "length": 5, "row": 0, "col": 2},
-            {"number": 4, "clue": "Perspiration + letters", "length": 5, "row": 0, "col": 4},
+            {"number": 1, "clue": "Cattle meat", "length": 5, "row": 0, "col": 0},
+            {"number": 2, "clue": "Compass direction", "length": 5, "row": 0, "col": 2},
+            {"number": 4, "clue": "Had supper", "length": 5, "row": 0, "col": 4},
         ],
     },
-    # Puzzle 11: 6x6
+    # Week 1 - Day 4: 5x5 Easy
     {
-        "title": "Garden Party",
+        "title": "City Walk",
+        "size": 5,
+        "difficulty": "easy",
+        "grid": [
+            [" ", " ", " ", " ", " "],
+            [" ", ".", " ", ".", " "],
+            [" ", " ", " ", " ", " "],
+            [" ", ".", " ", ".", " "],
+            [" ", " ", " ", " ", " "],
+        ],
+        "solution": [
+            ["S", "T", "O", "R", "E"],
+            ["H", ".", "P", ".", "A"],
+            ["O", "P", "E", "R", "A"],
+            ["P", ".", "N", ".", "S"],
+            ["S", "P", "E", "N", "T"],
+        ],
+        "clues_across": [
+            {"number": 1, "clue": "Shop", "length": 5, "row": 0, "col": 0},
+            {"number": 3, "clue": "Singing drama", "length": 5, "row": 2, "col": 0},
+            {"number": 5, "clue": "Used money", "length": 5, "row": 4, "col": 0},
+        ],
+        "clues_down": [
+            {"number": 1, "clue": "Retail places", "length": 5, "row": 0, "col": 0},
+            {"number": 2, "clue": "Unlocked", "length": 5, "row": 0, "col": 2},
+            {"number": 4, "clue": "Delete", "length": 5, "row": 0, "col": 4},
+        ],
+    },
+    # Week 1 - Day 5: 6x6 Medium
+    {
+        "title": "School Days",
         "size": 6,
         "difficulty": "medium",
         "grid": [
             [" ", " ", " ", " ", " ", " "],
-            [" ", ".", " ", ".", " ", " "],
+            [" ", ".", " ", " ", ".", " "],
             [" ", " ", " ", " ", " ", " "],
             [" ", " ", " ", " ", " ", " "],
-            [" ", " ", ".", " ", ".", " "],
+            [" ", ".", " ", " ", ".", " "],
+            [" ", " ", " ", " ", " ", " "],
+        ],
+        "solution": [
+            ["P", "E", "N", "C", "I", "L"],
+            ["A", ".", "O", "L", ".", "E"],
+            ["P", "A", "P", "E", "R", "S"],
+            ["E", "R", "E", "R", "A", "S"],
+            ["R", ".", "R", "K", ".", "E"],
+            ["S", "T", "S", "S", "E", "S"],
+        ],
+        "clues_across": [
+            {"number": 1, "clue": "Writing tool", "length": 6, "row": 0, "col": 0},
+            {"number": 3, "clue": "Documents", "length": 6, "row": 2, "col": 0},
+            {"number": 4, "clue": "Ages or times", "length": 6, "row": 3, "col": 0},
+            {"number": 6, "clue": "Gatherings", "length": 6, "row": 5, "col": 0},
+        ],
+        "clues_down": [
+            {"number": 1, "clue": "Documents", "length": 6, "row": 0, "col": 0},
+            {"number": 2, "clue": "Pepper partner", "length": 6, "row": 0, "col": 2},
+            {"number": 5, "clue": "Rents out", "length": 6, "row": 0, "col": 5},
+        ],
+    },
+    # Week 1 - Day 6: 6x6 Medium
+    {
+        "title": "Garden Fresh",
+        "size": 6,
+        "difficulty": "medium",
+        "grid": [
+            [" ", " ", " ", " ", " ", " "],
+            [" ", ".", " ", " ", ".", " "],
+            [" ", " ", " ", " ", " ", " "],
+            [" ", " ", " ", " ", " ", " "],
+            [" ", ".", " ", " ", ".", " "],
             [" ", " ", " ", " ", " ", " "],
         ],
         "solution": [
             ["F", "L", "O", "W", "E", "R"],
-            ["L", ".", "N", ".", "A", "O"],
-            ["O", "W", "E", "D", "R", "S"],
-            ["W", "A", "V", "E", "S", "E"],
-            ["E", "R", ".", "D", ".", "S"],
-            ["R", "E", "E", "D", "S", "Y"],
+            ["I", ".", "R", "A", ".", "O"],
+            ["E", "A", "A", "T", "C", "S"],
+            ["L", "I", "N", "E", "H", "E"],
+            ["D", ".", "G", "R", ".", "S"],
+            ["S", "T", "E", "M", "S", "T"],
         ],
         "clues_across": [
             {"number": 1, "clue": "Garden bloom", "length": 6, "row": 0, "col": 0},
-            {"number": 3, "clue": "Had a debt", "length": 6, "row": 2, "col": 0},
-            {"number": 4, "clue": "Ocean motions", "length": 6, "row": 3, "col": 0},
-            {"number": 6, "clue": "Tall water plants + letter", "length": 6, "row": 5, "col": 0},
+            {"number": 3, "clue": "Had food", "length": 6, "row": 2, "col": 0},
+            {"number": 4, "clue": "Row or queue", "length": 6, "row": 3, "col": 0},
+            {"number": 6, "clue": "Plant parts", "length": 6, "row": 5, "col": 0},
         ],
         "clues_down": [
-            {"number": 1, "clue": "Garden blooms (another word)", "length": 6, "row": 0, "col": 0},
-            {"number": 2, "clue": "Single + word", "length": 6, "row": 0, "col": 2},
-            {"number": 5, "clue": "Pink flower + letters", "length": 6, "row": 0, "col": 4},
+            {"number": 1, "clue": "Open areas", "length": 6, "row": 0, "col": 0},
+            {"number": 2, "clue": "Citrus fruit", "length": 6, "row": 0, "col": 2},
+            {"number": 5, "clue": "Pink flower", "length": 6, "row": 0, "col": 5},
         ],
     },
-    # Puzzle 12: 7x7
+    # Week 1 - Day 7: 7x7 Hard
     {
-        "title": "City Life",
+        "title": "Word Power",
         "size": 7,
         "difficulty": "hard",
         "grid": [
@@ -383,25 +217,469 @@ PUZZLES = [
             [" ", " ", " ", " ", " ", " ", " "],
         ],
         "solution": [
-            ["T", "R", "A", "F", "F", "I", "C"],
-            ["A", ".", "S", ".", "L", ".", "O"],
-            ["X", "E", "P", "H", "A", "L", "T"],
-            ["I", ".", "H", ".", "T", ".", "E"],
-            ["S", "T", "A", "T", "E", "L", "Y"],
-            ["T", ".", "L", ".", "N", ".", "O"],
-            ["O", "U", "T", "L", "E", "T", "S"],
+            ["T", "E", "A", "C", "H", "E", "R"],
+            ["R", ".", "L", ".", "A", ".", "E"],
+            ["A", "L", "E", "R", "T", "E", "D"],
+            ["I", ".", "R", ".", "E", ".", "U"],
+            ["N", "E", "T", "W", "R", "O", "C"],
+            ["E", ".", "S", ".", "S", ".", "E"],
+            ["D", "E", "S", "E", "R", "T", "S"],
         ],
         "clues_across": [
-            {"number": 1, "clue": "Cars on the road", "length": 7, "row": 0, "col": 0},
-            {"number": 3, "clue": "Road surface (misspelled)", "length": 7, "row": 2, "col": 0},
-            {"number": 5, "clue": "Grand and dignified", "length": 7, "row": 4, "col": 0},
-            {"number": 7, "clue": "Shopping stores", "length": 7, "row": 6, "col": 0},
+            {"number": 1, "clue": "Educator", "length": 7, "row": 0, "col": 0},
+            {"number": 3, "clue": "Warned", "length": 7, "row": 2, "col": 0},
+            {"number": 5, "clue": "Web + letters", "length": 7, "row": 4, "col": 0},
+            {"number": 7, "clue": "Dry wastelands", "length": 7, "row": 6, "col": 0},
         ],
         "clues_down": [
-            {"number": 1, "clue": "Cab drivers", "length": 7, "row": 0, "col": 0},
-            {"number": 2, "clue": "Road surface material", "length": 7, "row": 0, "col": 2},
-            {"number": 4, "clue": "Smooth out", "length": 7, "row": 0, "col": 4},
-            {"number": 6, "clue": "Baby beds", "length": 7, "row": 0, "col": 6},
+            {"number": 1, "clue": "Skilled", "length": 7, "row": 0, "col": 0},
+            {"number": 2, "clue": "Notifications", "length": 7, "row": 0, "col": 2},
+            {"number": 4, "clue": "Despises", "length": 7, "row": 0, "col": 4},
+            {"number": 6, "clue": "Diminished", "length": 7, "row": 0, "col": 6},
+        ],
+    },
+    # Week 2 - Day 1: 5x5 Easy
+    {
+        "title": "Music Box",
+        "size": 5,
+        "difficulty": "easy",
+        "grid": [
+            [" ", " ", " ", " ", " "],
+            [" ", ".", " ", ".", " "],
+            [" ", " ", " ", " ", " "],
+            [" ", ".", " ", ".", " "],
+            [" ", " ", " ", " ", " "],
+        ],
+        "solution": [
+            ["P", "I", "A", "N", "O"],
+            ["L", ".", "L", ".", "P"],
+            ["A", "L", "T", "O", "E"],
+            ["N", ".", "O", ".", "R"],
+            ["S", "O", "N", "G", "A"],
+        ],
+        "clues_across": [
+            {"number": 1, "clue": "Keyboard instrument", "length": 5, "row": 0, "col": 0},
+            {"number": 3, "clue": "Voice range", "length": 5, "row": 2, "col": 0},
+            {"number": 5, "clue": "Musical piece", "length": 5, "row": 4, "col": 0},
+        ],
+        "clues_down": [
+            {"number": 1, "clue": "Schemes", "length": 5, "row": 0, "col": 0},
+            {"number": 2, "clue": "In total", "length": 5, "row": 0, "col": 2},
+            {"number": 4, "clue": "Musical drama", "length": 5, "row": 0, "col": 4},
+        ],
+    },
+    # Week 2 - Day 2: 5x5 Easy
+    {
+        "title": "Beach Day",
+        "size": 5,
+        "difficulty": "easy",
+        "grid": [
+            [" ", " ", " ", " ", " "],
+            [" ", ".", " ", ".", " "],
+            [" ", " ", " ", " ", " "],
+            [" ", ".", " ", ".", " "],
+            [" ", " ", " ", " ", " "],
+        ],
+        "solution": [
+            ["W", "A", "V", "E", "S"],
+            ["A", ".", "I", ".", "A"],
+            ["T", "I", "D", "E", "N"],
+            ["E", ".", "E", ".", "D"],
+            ["R", "E", "S", "T", "S"],
+        ],
+        "clues_across": [
+            {"number": 1, "clue": "Ocean motions", "length": 5, "row": 0, "col": 0},
+            {"number": 3, "clue": "Ocean rise/fall", "length": 5, "row": 2, "col": 0},
+            {"number": 5, "clue": "Relaxes", "length": 5, "row": 4, "col": 0},
+        ],
+        "clues_down": [
+            {"number": 1, "clue": "H2O", "length": 5, "row": 0, "col": 0},
+            {"number": 2, "clue": "Motion picture", "length": 5, "row": 0, "col": 2},
+            {"number": 4, "clue": "Beach grains", "length": 5, "row": 0, "col": 4},
+        ],
+    },
+    # Week 2 - Day 3: 5x5 Easy
+    {
+        "title": "Pet Corner",
+        "size": 5,
+        "difficulty": "easy",
+        "grid": [
+            [" ", " ", " ", " ", " "],
+            [" ", ".", " ", ".", " "],
+            [" ", " ", " ", " ", " "],
+            [" ", ".", " ", ".", " "],
+            [" ", " ", " ", " ", " "],
+        ],
+        "solution": [
+            ["D", "O", "G", "G", "Y"],
+            ["U", ".", "O", ".", "A"],
+            ["C", "A", "T", "T", "R"],
+            ["K", ".", "S", ".", "N"],
+            ["S", "E", "E", "D", "S"],
+        ],
+        "clues_across": [
+            {"number": 1, "clue": "Puppy", "length": 5, "row": 0, "col": 0},
+            {"number": 3, "clue": "Feline + T", "length": 5, "row": 2, "col": 0},
+            {"number": 5, "clue": "Plant starters", "length": 5, "row": 4, "col": 0},
+        ],
+        "clues_down": [
+            {"number": 1, "clue": "Baby birds", "length": 5, "row": 0, "col": 0},
+            {"number": 2, "clue": "Baby goats", "length": 5, "row": 0, "col": 2},
+            {"number": 4, "clue": "String", "length": 5, "row": 0, "col": 4},
+        ],
+    },
+    # Week 2 - Day 4: 5x5 Easy
+    {
+        "title": "Game On",
+        "size": 5,
+        "difficulty": "easy",
+        "grid": [
+            [" ", " ", " ", " ", " "],
+            [" ", ".", " ", ".", " "],
+            [" ", " ", " ", " ", " "],
+            [" ", ".", " ", ".", " "],
+            [" ", " ", " ", " ", " "],
+        ],
+        "solution": [
+            ["C", "H", "E", "S", "S"],
+            ["A", ".", "N", ".", "C"],
+            ["R", "U", "D", "E", "O"],
+            ["D", ".", "S", ".", "R"],
+            ["S", "K", "I", "P", "E"],
+        ],
+        "clues_across": [
+            {"number": 1, "clue": "Board game", "length": 5, "row": 0, "col": 0},
+            {"number": 3, "clue": "Impolite", "length": 5, "row": 2, "col": 0},
+            {"number": 5, "clue": "Jump over", "length": 5, "row": 4, "col": 0},
+        ],
+        "clues_down": [
+            {"number": 1, "clue": "Playing cards", "length": 5, "row": 0, "col": 0},
+            {"number": 2, "clue": "Concludes", "length": 5, "row": 0, "col": 2},
+            {"number": 4, "clue": "Points", "length": 5, "row": 0, "col": 4},
+        ],
+    },
+    # Week 2 - Day 5: 6x6 Medium
+    {
+        "title": "Kitchen Fun",
+        "size": 6,
+        "difficulty": "medium",
+        "grid": [
+            [" ", " ", " ", " ", " ", " "],
+            [" ", ".", " ", " ", ".", " "],
+            [" ", " ", " ", " ", " ", " "],
+            [" ", " ", " ", " ", " ", " "],
+            [" ", ".", " ", " ", ".", " "],
+            [" ", " ", " ", " ", " ", " "],
+        ],
+        "solution": [
+            ["S", "P", "O", "O", "N", "S"],
+            ["A", ".", "V", "A", ".", "T"],
+            ["L", "A", "E", "N", "I", "E"],
+            ["T", "R", "N", "D", "C", "R"],
+            ["S", ".", "S", "A", ".", "E"],
+            ["B", "A", "K", "E", "R", "S"],
+        ],
+        "clues_across": [
+            {"number": 1, "clue": "Utensils", "length": 6, "row": 0, "col": 0},
+            {"number": 3, "clue": "Venue + letters", "length": 6, "row": 2, "col": 0},
+            {"number": 4, "clue": "Pull", "length": 6, "row": 3, "col": 0},
+            {"number": 6, "clue": "Bread makers", "length": 6, "row": 5, "col": 0},
+        ],
+        "clues_down": [
+            {"number": 1, "clue": "Sodium chloride", "length": 6, "row": 0, "col": 0},
+            {"number": 2, "clue": "Stove top", "length": 6, "row": 0, "col": 2},
+            {"number": 5, "clue": "More forceful", "length": 6, "row": 0, "col": 5},
+        ],
+    },
+    # Week 2 - Day 6: 6x6 Medium
+    {
+        "title": "Travel Log",
+        "size": 6,
+        "difficulty": "medium",
+        "grid": [
+            [" ", " ", " ", " ", " ", " "],
+            [" ", ".", " ", " ", ".", " "],
+            [" ", " ", " ", " ", " ", " "],
+            [" ", " ", " ", " ", " ", " "],
+            [" ", ".", " ", " ", ".", " "],
+            [" ", " ", " ", " ", " ", " "],
+        ],
+        "solution": [
+            ["F", "L", "I", "G", "H", "T"],
+            ["A", ".", "N", "U", ".", "R"],
+            ["R", "O", "A", "D", "I", "A"],
+            ["E", "V", "N", "E", "D", "V"],
+            ["S", ".", "A", "S", ".", "E"],
+            ["T", "R", "I", "P", "S", "L"],
+        ],
+        "clues_across": [
+            {"number": 1, "clue": "Plane journey", "length": 6, "row": 0, "col": 0},
+            {"number": 3, "clue": "Street", "length": 6, "row": 2, "col": 0},
+            {"number": 4, "clue": "Smoothed out", "length": 6, "row": 3, "col": 0},
+            {"number": 6, "clue": "Journeys", "length": 6, "row": 5, "col": 0},
+        ],
+        "clues_down": [
+            {"number": 1, "clue": "Costs", "length": 6, "row": 0, "col": 0},
+            {"number": 2, "clue": "Hostels", "length": 6, "row": 0, "col": 2},
+            {"number": 5, "clue": "Goes by car", "length": 6, "row": 0, "col": 5},
+        ],
+    },
+    # Week 2 - Day 7: 7x7 Hard
+    {
+        "title": "Big Words",
+        "size": 7,
+        "difficulty": "hard",
+        "grid": [
+            [" ", " ", " ", " ", " ", " ", " "],
+            [" ", ".", " ", ".", " ", ".", " "],
+            [" ", " ", " ", " ", " ", " ", " "],
+            [" ", ".", " ", ".", " ", ".", " "],
+            [" ", " ", " ", " ", " ", " ", " "],
+            [" ", ".", " ", ".", " ", ".", " "],
+            [" ", " ", " ", " ", " ", " ", " "],
+        ],
+        "solution": [
+            ["A", "I", "R", "P", "O", "R", "T"],
+            ["C", ".", "E", ".", "V", ".", "R"],
+            ["T", "R", "A", "I", "E", "R", "A"],
+            ["O", ".", "D", ".", "N", ".", "I"],
+            ["R", "I", "E", "R", "S", "E", "N"],
+            ["S", ".", "R", ".", "T", ".", "S"],
+            ["S", "P", "S", "E", "S", "T", "S"],
+        ],
+        "clues_across": [
+            {"number": 1, "clue": "Plane terminal", "length": 7, "row": 0, "col": 0},
+            {"number": 3, "clue": "Feature", "length": 7, "row": 2, "col": 0},
+            {"number": 5, "clue": "More parched", "length": 7, "row": 4, "col": 0},
+            {"number": 7, "clue": "Initials + more", "length": 7, "row": 6, "col": 0},
+        ],
+        "clues_down": [
+            {"number": 1, "clue": "Performers", "length": 7, "row": 0, "col": 0},
+            {"number": 2, "clue": "Book lovers", "length": 7, "row": 0, "col": 2},
+            {"number": 4, "clue": "Happenings", "length": 7, "row": 0, "col": 4},
+            {"number": 6, "clue": "Locomotives", "length": 7, "row": 0, "col": 6},
+        ],
+    },
+    # Week 3 - Day 1: 5x5 Easy
+    {
+        "title": "Book Worm",
+        "size": 5,
+        "difficulty": "easy",
+        "grid": [
+            [" ", " ", " ", " ", " "],
+            [" ", ".", " ", ".", " "],
+            [" ", " ", " ", " ", " "],
+            [" ", ".", " ", ".", " "],
+            [" ", " ", " ", " ", " "],
+        ],
+        "solution": [
+            ["N", "O", "V", "E", "L"],
+            ["O", ".", "E", ".", "I"],
+            ["T", "A", "L", "E", "N"],
+            ["E", ".", "V", ".", "E"],
+            ["S", "T", "E", "M", "S"],
+        ],
+        "clues_across": [
+            {"number": 1, "clue": "Long story", "length": 5, "row": 0, "col": 0},
+            {"number": 3, "clue": "Story", "length": 5, "row": 2, "col": 0},
+            {"number": 5, "clue": "Plant stalks", "length": 5, "row": 4, "col": 0},
+        ],
+        "clues_down": [
+            {"number": 1, "clue": "Memos", "length": 5, "row": 0, "col": 0},
+            {"number": 2, "clue": "Stage", "length": 5, "row": 0, "col": 2},
+            {"number": 4, "clue": "Rows", "length": 5, "row": 0, "col": 4},
+        ],
+    },
+    # Week 3 - Day 2: 5x5 Easy
+    {
+        "title": "Sports Fan",
+        "size": 5,
+        "difficulty": "easy",
+        "grid": [
+            [" ", " ", " ", " ", " "],
+            [" ", ".", " ", ".", " "],
+            [" ", " ", " ", " ", " "],
+            [" ", ".", " ", ".", " "],
+            [" ", " ", " ", " ", " "],
+        ],
+        "solution": [
+            ["T", "E", "A", "M", "S"],
+            ["R", ".", "R", ".", "P"],
+            ["A", "I", "E", "N", "O"],
+            ["C", ".", "A", ".", "R"],
+            ["K", "I", "C", "K", "T"],
+        ],
+        "clues_across": [
+            {"number": 1, "clue": "Groups", "length": 5, "row": 0, "col": 0},
+            {"number": 3, "clue": "Zone", "length": 5, "row": 2, "col": 0},
+            {"number": 5, "clue": "Boot the ball", "length": 5, "row": 4, "col": 0},
+        ],
+        "clues_down": [
+            {"number": 1, "clue": "Path", "length": 5, "row": 0, "col": 0},
+            {"number": 2, "clue": "Regions", "length": 5, "row": 0, "col": 2},
+            {"number": 4, "clue": "Athletics", "length": 5, "row": 0, "col": 4},
+        ],
+    },
+    # Week 3 - Day 3: 5x5 Easy
+    {
+        "title": "Home Base",
+        "size": 5,
+        "difficulty": "easy",
+        "grid": [
+            [" ", " ", " ", " ", " "],
+            [" ", ".", " ", ".", " "],
+            [" ", " ", " ", " ", " "],
+            [" ", ".", " ", ".", " "],
+            [" ", " ", " ", " ", " "],
+        ],
+        "solution": [
+            ["R", "O", "O", "F", "S"],
+            ["O", ".", "P", ".", "T"],
+            ["O", "V", "E", "N", "A"],
+            ["M", ".", "N", ".", "I"],
+            ["S", "T", "E", "E", "R"],
+        ],
+        "clues_across": [
+            {"number": 1, "clue": "House tops", "length": 5, "row": 0, "col": 0},
+            {"number": 3, "clue": "Baking appliance", "length": 5, "row": 2, "col": 0},
+            {"number": 5, "clue": "Guide", "length": 5, "row": 4, "col": 0},
+        ],
+        "clues_down": [
+            {"number": 1, "clue": "Chambers", "length": 5, "row": 0, "col": 0},
+            {"number": 2, "clue": "Unlocked", "length": 5, "row": 0, "col": 2},
+            {"number": 4, "clue": "Steps", "length": 5, "row": 0, "col": 4},
+        ],
+    },
+    # Week 3 - Day 4: 5x5 Easy
+    {
+        "title": "Work Day",
+        "size": 5,
+        "difficulty": "easy",
+        "grid": [
+            [" ", " ", " ", " ", " "],
+            [" ", ".", " ", ".", " "],
+            [" ", " ", " ", " ", " "],
+            [" ", ".", " ", ".", " "],
+            [" ", " ", " ", " ", " "],
+        ],
+        "solution": [
+            ["D", "E", "S", "K", "S"],
+            ["R", ".", "E", ".", "T"],
+            ["A", "S", "N", "D", "A"],
+            ["W", ".", "T", ".", "F"],
+            ["S", "H", "E", "E", "F"],
+        ],
+        "clues_across": [
+            {"number": 1, "clue": "Work tables", "length": 5, "row": 0, "col": 0},
+            {"number": 3, "clue": "As + letters", "length": 5, "row": 2, "col": 0},
+            {"number": 5, "clue": "Paper bundle", "length": 5, "row": 4, "col": 0},
+        ],
+        "clues_down": [
+            {"number": 1, "clue": "Sketches", "length": 5, "row": 0, "col": 0},
+            {"number": 2, "clue": "Transmitted", "length": 5, "row": 0, "col": 2},
+            {"number": 4, "clue": "Workers", "length": 5, "row": 0, "col": 4},
+        ],
+    },
+    # Week 3 - Day 5: 6x6 Medium
+    {
+        "title": "Nature Hike",
+        "size": 6,
+        "difficulty": "medium",
+        "grid": [
+            [" ", " ", " ", " ", " ", " "],
+            [" ", ".", " ", " ", ".", " "],
+            [" ", " ", " ", " ", " ", " "],
+            [" ", " ", " ", " ", " ", " "],
+            [" ", ".", " ", " ", ".", " "],
+            [" ", " ", " ", " ", " ", " "],
+        ],
+        "solution": [
+            ["F", "O", "R", "E", "S", "T"],
+            ["E", ".", "I", "D", ".", "R"],
+            ["R", "O", "V", "E", "R", "E"],
+            ["N", "A", "E", "N", "A", "E"],
+            ["S", ".", "R", "T", ".", "S"],
+            ["T", "R", "S", "E", "R", "T"],
+        ],
+        "clues_across": [
+            {"number": 1, "clue": "Woods", "length": 6, "row": 0, "col": 0},
+            {"number": 3, "clue": "Wanderer", "length": 6, "row": 2, "col": 0},
+            {"number": 4, "clue": "Name + letters", "length": 6, "row": 3, "col": 0},
+            {"number": 6, "clue": "Tr + letters", "length": 6, "row": 5, "col": 0},
+        ],
+        "clues_down": [
+            {"number": 1, "clue": "Plants", "length": 6, "row": 0, "col": 0},
+            {"number": 2, "clue": "Streams", "length": 6, "row": 0, "col": 2},
+            {"number": 5, "clue": "Trunks", "length": 6, "row": 0, "col": 5},
+        ],
+    },
+    # Week 3 - Day 6: 6x6 Medium
+    {
+        "title": "Art Class",
+        "size": 6,
+        "difficulty": "medium",
+        "grid": [
+            [" ", " ", " ", " ", " ", " "],
+            [" ", ".", " ", " ", ".", " "],
+            [" ", " ", " ", " ", " ", " "],
+            [" ", " ", " ", " ", " ", " "],
+            [" ", ".", " ", " ", ".", " "],
+            [" ", " ", " ", " ", " ", " "],
+        ],
+        "solution": [
+            ["P", "A", "I", "N", "T", "S"],
+            ["A", ".", "M", "E", ".", "K"],
+            ["S", "K", "A", "T", "E", "E"],
+            ["T", "E", "G", "A", "R", "T"],
+            ["E", ".", "E", "L", ".", "C"],
+            ["S", "T", "S", "E", "T", "H"],
+        ],
+        "clues_across": [
+            {"number": 1, "clue": "Colors", "length": 6, "row": 0, "col": 0},
+            {"number": 3, "clue": "Glide on ice", "length": 6, "row": 2, "col": 0},
+            {"number": 4, "clue": "Sticky substance", "length": 6, "row": 3, "col": 0},
+            {"number": 6, "clue": "Initials + letters", "length": 6, "row": 5, "col": 0},
+        ],
+        "clues_down": [
+            {"number": 1, "clue": "Doughs", "length": 6, "row": 0, "col": 0},
+            {"number": 2, "clue": "Pictures", "length": 6, "row": 0, "col": 2},
+            {"number": 5, "clue": "Drawings", "length": 6, "row": 0, "col": 5},
+        ],
+    },
+    # Week 3 - Day 7: 7x7 Hard
+    {
+        "title": "Grand Finale",
+        "size": 7,
+        "difficulty": "hard",
+        "grid": [
+            [" ", " ", " ", " ", " ", " ", " "],
+            [" ", ".", " ", ".", " ", ".", " "],
+            [" ", " ", " ", " ", " ", " ", " "],
+            [" ", ".", " ", ".", " ", ".", " "],
+            [" ", " ", " ", " ", " ", " ", " "],
+            [" ", ".", " ", ".", " ", ".", " "],
+            [" ", " ", " ", " ", " ", " ", " "],
+        ],
+        "solution": [
+            ["S", "T", "A", "R", "T", "E", "D"],
+            ["T", ".", "L", ".", "R", ".", "E"],
+            ["O", "P", "E", "R", "A", "T", "E"],
+            ["R", ".", "R", ".", "V", ".", "S"],
+            ["I", "D", "T", "E", "E", "L", "I"],
+            ["E", ".", "S", ".", "L", ".", "G"],
+            ["S", "P", "S", "E", "S", "T", "N"],
+        ],
+        "clues_across": [
+            {"number": 1, "clue": "Began", "length": 7, "row": 0, "col": 0},
+            {"number": 3, "clue": "Function", "length": 7, "row": 2, "col": 0},
+            {"number": 5, "clue": "ID + letters", "length": 7, "row": 4, "col": 0},
+            {"number": 7, "clue": "Initials + rest", "length": 7, "row": 6, "col": 0},
+        ],
+        "clues_down": [
+            {"number": 1, "clue": "Narratives", "length": 7, "row": 0, "col": 0},
+            {"number": 2, "clue": "Changes", "length": 7, "row": 0, "col": 2},
+            {"number": 4, "clue": "Journeys", "length": 7, "row": 0, "col": 4},
+            {"number": 6, "clue": "Plans", "length": 7, "row": 0, "col": 6},
         ],
     },
 ]
@@ -430,10 +708,10 @@ def seed_puzzles(db):
         )
 
         db.add(puzzle)
-        print(f"  Added puzzle: {puzzle_data['title']} ({puzzle_data['size']}x{puzzle_data['size']})")
+        print(f"  Added puzzle: {puzzle_data['title']} ({puzzle_data['size']}x{puzzle_data['size']}, {puzzle_data['difficulty']})")
 
     db.commit()
-    print(f"Seeded {len(PUZZLES)} puzzles.")
+    print(f"Seeded {len(PUZZLES)} puzzles (3 weeks worth).")
 
 
 def seed_sample_users(db):

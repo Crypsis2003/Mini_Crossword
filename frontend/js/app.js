@@ -56,10 +56,17 @@ const App = {
             this.showToast('Logged out successfully', 'success');
         });
 
+        // Start game button
+        document.getElementById('btn-start').addEventListener('click', () => Crossword.startGame());
+
         // Game controls
+        document.getElementById('btn-hint').addEventListener('click', () => Crossword.hint());
         document.getElementById('btn-check').addEventListener('click', () => Crossword.check());
         document.getElementById('btn-reveal').addEventListener('click', () => Crossword.reveal());
         document.getElementById('btn-clear').addEventListener('click', () => Crossword.clear());
+
+        // Theme picker
+        this.setupThemePicker();
 
         // Completion modal
         document.getElementById('close-completion').addEventListener('click', () => {
@@ -467,6 +474,42 @@ const App = {
         setTimeout(() => {
             toast.remove();
         }, 3000);
+    },
+
+    /**
+     * Set up theme picker functionality.
+     */
+    setupThemePicker() {
+        // Load saved theme
+        const savedTheme = localStorage.getItem('crossword-theme') || 'default';
+        this.applyTheme(savedTheme);
+
+        // Add click listeners to theme buttons
+        document.querySelectorAll('.theme-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const theme = btn.dataset.theme;
+                this.applyTheme(theme);
+                localStorage.setItem('crossword-theme', theme);
+            });
+        });
+    },
+
+    /**
+     * Apply a theme to the page.
+     */
+    applyTheme(theme) {
+        // Remove all theme classes
+        document.body.classList.remove('theme-plants', 'theme-ocean', 'theme-football');
+
+        // Add new theme class (except for default)
+        if (theme !== 'default') {
+            document.body.classList.add(`theme-${theme}`);
+        }
+
+        // Update active state on buttons
+        document.querySelectorAll('.theme-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.theme === theme);
+        });
     },
 };
 

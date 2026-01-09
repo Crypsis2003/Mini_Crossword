@@ -3,25 +3,31 @@
  */
 const Crossword = {
     puzzle: null,
+    solution: null,
     grid: [],
     selectedCell: null,
-    direction: 'across', // 'across' or 'down'
+    direction: 'across',
     timerInterval: null,
     startTime: null,
     elapsedMs: 0,
     isCompleted: false,
     hasStarted: false,
+    isRevealed: false,
+    hintsUsed: 0,
 
     /**
      * Initialize the crossword with a puzzle.
      */
     init(puzzle) {
         this.puzzle = puzzle;
+        this.solution = null;
         this.grid = [];
         this.selectedCell = null;
         this.direction = 'across';
         this.isCompleted = false;
         this.hasStarted = false;
+        this.isRevealed = false;
+        this.hintsUsed = 0;
         this.elapsedMs = 0;
         this.stopTimer();
 
@@ -36,6 +42,53 @@ const Crossword = {
         this.render();
         this.renderClues();
         this.updateTimer();
+        this.showStartScreen();
+        this.disableControls();
+    },
+
+    /**
+     * Show the start screen overlay.
+     */
+    showStartScreen() {
+        document.getElementById('start-screen').classList.remove('hidden');
+        document.getElementById('crossword-grid').classList.add('blurred');
+    },
+
+    /**
+     * Hide the start screen and begin the game.
+     */
+    startGame() {
+        document.getElementById('start-screen').classList.add('hidden');
+        document.getElementById('crossword-grid').classList.remove('blurred');
+        this.enableControls();
+        this.startTimer();
+
+        // Focus first cell
+        const firstClue = this.puzzle.clues_across[0];
+        if (firstClue) {
+            this.selectCell(firstClue.row, firstClue.col);
+            this.focusCell(firstClue.row, firstClue.col);
+        }
+    },
+
+    /**
+     * Enable game control buttons.
+     */
+    enableControls() {
+        document.getElementById('btn-hint').disabled = false;
+        document.getElementById('btn-check').disabled = false;
+        document.getElementById('btn-reveal').disabled = false;
+        document.getElementById('btn-clear').disabled = false;
+    },
+
+    /**
+     * Disable game control buttons.
+     */
+    disableControls() {
+        document.getElementById('btn-hint').disabled = true;
+        document.getElementById('btn-check').disabled = true;
+        document.getElementById('btn-reveal').disabled = true;
+        document.getElementById('btn-clear').disabled = true;
     },
 
     /**
@@ -46,7 +99,6 @@ const Crossword = {
         container.innerHTML = '';
         container.style.gridTemplateColumns = `repeat(${this.puzzle.size}, 48px)`;
 
-        // Build cell number map
         const cellNumbers = this.buildCellNumbers();
 
         for (let row = 0; row < this.puzzle.size; row++) {
@@ -59,7 +111,6 @@ const Crossword = {
                 if (this.puzzle.grid[row][col] === '.') {
                     cell.classList.add('block');
                 } else {
-                    // Add cell number if exists
                     const number = cellNumbers[`${row}-${col}`];
                     if (number) {
                         const numSpan = document.createElement('span');
@@ -68,7 +119,6 @@ const Crossword = {
                         cell.appendChild(numSpan);
                     }
 
-                    // Add input for letter
                     const input = document.createElement('input');
                     input.type = 'text';
                     input.className = 'cell-input';
@@ -148,8 +198,9 @@ const Crossword = {
      * Handle cell click.
      */
     handleCellClick(row, col, event) {
+        if (!this.hasStarted) return;
+
         if (this.selectedCell && this.selectedCell.row === row && this.selectedCell.col === col) {
-            // Toggle direction if clicking same cell
             this.direction = this.direction === 'across' ? 'down' : 'across';
         }
         this.selectCell(row, col);
@@ -159,6 +210,8 @@ const Crossword = {
      * Handle clue click.
      */
     handleClueClick(clue, direction) {
+        if (!this.hasStarted) return;
+
         this.direction = direction;
         this.selectCell(clue.row, clue.col);
         this.focusCell(clue.row, clue.col);
@@ -188,7 +241,6 @@ const Crossword = {
      * Update cell highlighting.
      */
     updateHighlight() {
-        // Clear all highlights
         document.querySelectorAll('.cell').forEach(cell => {
             cell.classList.remove('selected', 'highlighted');
         });
@@ -197,13 +249,11 @@ const Crossword = {
 
         const { row, col } = this.selectedCell;
 
-        // Highlight selected cell
         const selectedCell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
         if (selectedCell) {
             selectedCell.classList.add('selected');
         }
 
-        // Highlight word cells
         const wordCells = this.getWordCells(row, col, this.direction);
         wordCells.forEach(({ r, c }) => {
             const cell = document.querySelector(`.cell[data-row="${r}"][data-col="${c}"]`);
@@ -242,22 +292,18 @@ const Crossword = {
         const cells = [];
 
         if (direction === 'across') {
-            // Find start of word
             let startCol = col;
             while (startCol > 0 && this.puzzle.grid[row][startCol - 1] !== '.') {
                 startCol--;
             }
-            // Collect word cells
             for (let c = startCol; c < this.puzzle.size && this.puzzle.grid[row][c] !== '.'; c++) {
                 cells.push({ r: row, c });
             }
         } else {
-            // Find start of word
             let startRow = row;
             while (startRow > 0 && this.puzzle.grid[startRow - 1][col] !== '.') {
                 startRow--;
             }
-            // Collect word cells
             for (let r = startRow; r < this.puzzle.size && this.puzzle.grid[r][col] !== '.'; r++) {
                 cells.push({ r, c: col });
             }
@@ -275,7 +321,6 @@ const Crossword = {
         const { row, col } = this.selectedCell;
         const clues = this.direction === 'across' ? this.puzzle.clues_across : this.puzzle.clues_down;
 
-        // Find the clue that contains this cell
         for (const clue of clues) {
             const cells = this.getWordCells(clue.row, clue.col, this.direction);
             if (cells.some(c => c.r === row && c.c === col)) {
@@ -290,9 +335,7 @@ const Crossword = {
      * Handle input in a cell.
      */
     handleInput(row, col, event) {
-        if (!this.hasStarted) {
-            this.startTimer();
-        }
+        if (!this.hasStarted || this.isCompleted) return;
 
         const value = event.target.value.toUpperCase();
         event.target.value = value;
@@ -309,6 +352,8 @@ const Crossword = {
      * Handle keyboard navigation.
      */
     handleKeyDown(row, col, event) {
+        if (!this.hasStarted) return;
+
         switch (event.key) {
             case 'ArrowUp':
                 event.preventDefault();
@@ -405,7 +450,6 @@ const Crossword = {
         let nextIndex = currentIndex + 1;
 
         if (nextIndex >= clues.length) {
-            // Switch direction and go to first clue
             this.direction = this.direction === 'across' ? 'down' : 'across';
             const newClues = this.direction === 'across' ? this.puzzle.clues_across : this.puzzle.clues_down;
             nextIndex = 0;
@@ -430,7 +474,6 @@ const Crossword = {
         let prevIndex = currentIndex - 1;
 
         if (prevIndex < 0) {
-            // Switch direction and go to last clue
             this.direction = this.direction === 'across' ? 'down' : 'across';
             const newClues = this.direction === 'across' ? this.puzzle.clues_across : this.puzzle.clues_down;
             prevIndex = newClues.length - 1;
@@ -482,7 +525,6 @@ const Crossword = {
      * Check if puzzle is complete.
      */
     checkCompletion() {
-        // Check if all cells are filled
         for (let row = 0; row < this.puzzle.size; row++) {
             for (let col = 0; col < this.puzzle.size; col++) {
                 if (this.puzzle.grid[row][col] !== '.' && !this.grid[row][col]) {
@@ -491,7 +533,6 @@ const Crossword = {
             }
         }
 
-        // All cells filled, verify with server
         this.verifyCompletion();
         return true;
     },
@@ -517,19 +558,24 @@ const Crossword = {
     async handleCompletion() {
         this.isCompleted = true;
         this.stopTimer();
-        document.getElementById('timer').classList.add('completed');
 
-        // Submit solve if logged in
-        if (Auth.isLoggedIn()) {
-            try {
-                const result = await API.puzzles.solve(this.puzzle.id, this.elapsedMs, this.grid);
-                this.showCompletionModal(result);
-            } catch (e) {
-                console.error('Error submitting solve:', e);
+        if (this.isRevealed) {
+            document.getElementById('timer').classList.add('invalidated');
+            this.showCompletionModal({ time_ms: this.elapsedMs, revealed: true });
+        } else {
+            document.getElementById('timer').classList.add('completed');
+
+            if (Auth.isLoggedIn()) {
+                try {
+                    const result = await API.puzzles.solve(this.puzzle.id, this.elapsedMs, this.grid);
+                    this.showCompletionModal(result);
+                } catch (e) {
+                    console.error('Error submitting solve:', e);
+                    this.showCompletionModal({ time_ms: this.elapsedMs });
+                }
+            } else {
                 this.showCompletionModal({ time_ms: this.elapsedMs });
             }
-        } else {
-            this.showCompletionModal({ time_ms: this.elapsedMs });
         }
     },
 
@@ -540,12 +586,30 @@ const Crossword = {
         const minutes = Math.floor(this.elapsedMs / 60000);
         const seconds = Math.floor((this.elapsedMs % 60000) / 1000);
 
-        document.getElementById('completion-time').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        const timeEl = document.getElementById('completion-time');
+        timeEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
 
-        if (result.rank) {
-            document.getElementById('completion-rank').textContent = `You ranked #${result.rank}!`;
-        } else if (!Auth.isLoggedIn()) {
-            document.getElementById('completion-rank').textContent = 'Login to save your time!';
+        const titleEl = document.getElementById('completion-title-text');
+        const iconEl = document.getElementById('completion-icon');
+        const rankEl = document.getElementById('completion-rank');
+
+        if (result.revealed || this.isRevealed) {
+            titleEl.textContent = 'Puzzle Revealed';
+            iconEl.textContent = '👁';
+            timeEl.classList.add('invalidated');
+            rankEl.textContent = 'Time not recorded (reveal used)';
+        } else {
+            titleEl.textContent = 'Puzzle Complete!';
+            iconEl.textContent = '🎉';
+            timeEl.classList.remove('invalidated');
+
+            if (result.rank) {
+                rankEl.textContent = `You ranked #${result.rank}!`;
+            } else if (!Auth.isLoggedIn()) {
+                rankEl.textContent = 'Login to save your time!';
+            } else {
+                rankEl.textContent = '';
+            }
         }
 
         if (result.share_text) {
@@ -556,18 +620,17 @@ const Crossword = {
     },
 
     /**
-     * Check the puzzle (highlight incorrect cells).
+     * Check the puzzle - show correct/incorrect cells.
      */
     async check() {
         try {
             const result = await API.puzzles.check(this.puzzle.id, this.grid);
 
-            // Clear previous check highlights
             document.querySelectorAll('.cell').forEach(cell => {
                 cell.classList.remove('correct', 'incorrect');
             });
 
-            // Highlight cells
+            let allCorrect = true;
             for (let row = 0; row < this.puzzle.size; row++) {
                 for (let col = 0; col < this.puzzle.size; col++) {
                     if (this.puzzle.grid[row][col] === '.') continue;
@@ -576,33 +639,140 @@ const Crossword = {
                     if (this.grid[row][col]) {
                         const isIncorrect = result.incorrect_cells.some(([r, c]) => r === row && c === col);
                         cell.classList.add(isIncorrect ? 'incorrect' : 'correct');
+                        if (isIncorrect) allCorrect = false;
                     }
                 }
             }
 
-            // Clear highlights after 2 seconds
+            if (allCorrect && result.is_correct) {
+                App.showToast('All correct! Great job!', 'success');
+            } else if (result.incorrect_cells.length > 0) {
+                App.showToast(`${result.incorrect_cells.length} cell(s) incorrect`, 'error');
+            } else {
+                App.showToast('Looking good so far!', 'info');
+            }
+
             setTimeout(() => {
                 document.querySelectorAll('.cell').forEach(cell => {
                     cell.classList.remove('correct', 'incorrect');
                 });
-            }, 2000);
+            }, 3000);
         } catch (e) {
             App.showToast('Error checking puzzle', 'error');
         }
     },
 
     /**
-     * Reveal the puzzle solution.
+     * Give a hint - reveal one letter in the current word.
      */
-    reveal() {
-        if (!confirm('Are you sure you want to reveal the solution? This will stop the timer.')) {
+    async hint() {
+        if (!this.selectedCell) {
+            App.showToast('Select a cell first', 'info');
             return;
         }
 
+        // Fetch solution if we don't have it
+        if (!this.solution) {
+            try {
+                const result = await API.puzzles.check(this.puzzle.id, this.grid);
+                // We need to get the solution from the server
+                // For hints, we'll check each cell individually
+            } catch (e) {
+                App.showToast('Error getting hint', 'error');
+                return;
+            }
+        }
+
+        const wordCells = this.getWordCells(this.selectedCell.row, this.selectedCell.col, this.direction);
+
+        // Find an empty or incorrect cell in the current word
+        for (const { r, c } of wordCells) {
+            if (!this.grid[r][c]) {
+                // Try to get the correct letter by checking with server
+                await this.revealCell(r, c);
+                this.hintsUsed++;
+                App.showToast('Hint revealed!', 'info');
+                return;
+            }
+        }
+
+        // If all cells are filled, check for incorrect ones
+        try {
+            const result = await API.puzzles.check(this.puzzle.id, this.grid);
+            for (const { r, c } of wordCells) {
+                if (result.incorrect_cells.some(([ir, ic]) => ir === r && ic === c)) {
+                    await this.revealCell(r, c);
+                    this.hintsUsed++;
+                    App.showToast('Hint: corrected a letter!', 'info');
+                    return;
+                }
+            }
+            App.showToast('This word is already correct!', 'success');
+        } catch (e) {
+            App.showToast('Error getting hint', 'error');
+        }
+    },
+
+    /**
+     * Reveal a single cell by finding its correct letter.
+     */
+    async revealCell(row, col) {
+        // Try each letter until we find the correct one
+        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const originalValue = this.grid[row][col];
+
+        for (const letter of letters) {
+            this.grid[row][col] = letter;
+            try {
+                const result = await API.puzzles.check(this.puzzle.id, this.grid);
+                const isIncorrect = result.incorrect_cells.some(([r, c]) => r === row && c === col);
+                if (!isIncorrect) {
+                    // Found the correct letter
+                    const input = document.querySelector(`.cell-input[data-row="${row}"][data-col="${col}"]`);
+                    if (input) {
+                        input.value = letter;
+                    }
+                    const cell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
+                    if (cell) {
+                        cell.classList.add('revealed');
+                    }
+                    this.checkCompletion();
+                    return;
+                }
+            } catch (e) {
+                // Continue trying
+            }
+        }
+
+        // Restore original if nothing found
+        this.grid[row][col] = originalValue;
+    },
+
+    /**
+     * Reveal the entire puzzle solution.
+     */
+    async reveal() {
+        if (!confirm('Revealing the solution will invalidate your time. Are you sure?')) {
+            return;
+        }
+
+        this.isRevealed = true;
+        document.getElementById('timer').classList.add('invalidated');
+
+        // Reveal all cells by trying each one
+        App.showToast('Revealing solution...', 'info');
+
+        for (let row = 0; row < this.puzzle.size; row++) {
+            for (let col = 0; col < this.puzzle.size; col++) {
+                if (this.puzzle.grid[row][col] !== '.') {
+                    await this.revealCell(row, col);
+                }
+            }
+        }
+
+        this.isCompleted = true;
         this.stopTimer();
-        // Note: In a real app, we'd fetch the solution from the server
-        // For now, we just show a message
-        App.showToast('Solution reveal not implemented for security', 'info');
+        this.showCompletionModal({ revealed: true, time_ms: this.elapsedMs });
     },
 
     /**
@@ -620,6 +790,10 @@ const Crossword = {
                 }
             }
         }
+
+        document.querySelectorAll('.cell').forEach(cell => {
+            cell.classList.remove('revealed', 'correct', 'incorrect');
+        });
 
         this.render();
     },
