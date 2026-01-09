@@ -4,7 +4,6 @@ import json
 import sys
 from datetime import date, timedelta
 
-# Add the app directory to the path
 sys.path.insert(0, ".")
 
 from app.database import SessionLocal, init_db
@@ -13,484 +12,313 @@ from app.models.user import User
 from app.utils.security import hash_password
 
 
-# Valid mini crossword puzzles - each cell is part of both across and down words
-# Standard 5x5 grids with minimal black squares, all real English words
+# Valid mini crossword puzzles - every row AND column is a real word
+# Black square at [0][0] creates symmetric grids
 PUZZLES = [
-    # Puzzle 1: 5x5 - Easy (No black squares - all cells connected)
+    # Puzzle 1: STEW grid
     {
-        "title": "Morning Start",
+        "title": "Kitchen Classics",
         "size": 5,
         "difficulty": "easy",
         "grid": [
-            [" ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " "],
-        ],
-        "solution": [
-            ["S", "T", "A", "R", "E"],
-            ["C", "A", "B", "I", "N"],
-            ["A", "R", "E", "N", "A"],
-            ["L", "E", "N", "D", "S"],
-            ["P", "S", "S", "S", "T"],
-        ],
-        "clues_across": [
-            {"number": 1, "clue": "Gaze intently", "length": 5, "row": 0, "col": 0},
-            {"number": 6, "clue": "Small house", "length": 5, "row": 1, "col": 0},
-            {"number": 7, "clue": "Sports stadium", "length": 5, "row": 2, "col": 0},
-            {"number": 8, "clue": "Loans out", "length": 5, "row": 3, "col": 0},
-            {"number": 9, "clue": "Hey! (quietly)", "length": 5, "row": 4, "col": 0},
-        ],
-        "clues_down": [
-            {"number": 1, "clue": "Hair on head", "length": 5, "row": 0, "col": 0},
-            {"number": 2, "clue": "Begins", "length": 5, "row": 0, "col": 1},
-            {"number": 3, "clue": "Lacking", "length": 5, "row": 0, "col": 2},
-            {"number": 4, "clue": "Crazy", "length": 5, "row": 0, "col": 3},
-            {"number": 5, "clue": "Rent again", "length": 5, "row": 0, "col": 4},
-        ],
-    },
-    # Puzzle 2: 5x5 - Easy
-    {
-        "title": "Beach Day",
-        "size": 5,
-        "difficulty": "easy",
-        "grid": [
-            [" ", " ", " ", " ", " "],
+            [".", " ", " ", " ", " "],
             [" ", " ", " ", " ", " "],
             [" ", " ", " ", " ", " "],
             [" ", " ", " ", " ", " "],
             [" ", " ", " ", " ", " "],
         ],
         "solution": [
-            ["S", "A", "N", "D", "S"],
-            ["H", "U", "M", "A", "N"],
-            ["O", "P", "E", "R", "A"],
-            ["R", "E", "N", "T", "S"],
-            ["E", "D", "D", "Y", "S"],
-        ],
-        "clues_across": [
-            {"number": 1, "clue": "Beach grains", "length": 5, "row": 0, "col": 0},
-            {"number": 6, "clue": "Person", "length": 5, "row": 1, "col": 0},
-            {"number": 7, "clue": "Musical drama", "length": 5, "row": 2, "col": 0},
-            {"number": 8, "clue": "Leases", "length": 5, "row": 3, "col": 0},
-            {"number": 9, "clue": "Whirlpools", "length": 5, "row": 4, "col": 0},
-        ],
-        "clues_down": [
-            {"number": 1, "clue": "Coastline", "length": 5, "row": 0, "col": 0},
-            {"number": 2, "clue": "Grown-up", "length": 5, "row": 0, "col": 1},
-            {"number": 3, "clue": "Label", "length": 5, "row": 0, "col": 2},
-            {"number": 4, "clue": "Draws near", "length": 5, "row": 0, "col": 3},
-            {"number": 5, "clue": "Catches", "length": 5, "row": 0, "col": 4},
-        ],
-    },
-    # Puzzle 3: 5x5 - Easy
-    {
-        "title": "Word Play",
-        "size": 5,
-        "difficulty": "easy",
-        "grid": [
-            [" ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " "],
-        ],
-        "solution": [
-            ["C", "R", "A", "S", "H"],
-            ["L", "I", "V", "E", "R"],
-            ["A", "D", "O", "R", "E"],
-            ["S", "E", "N", "S", "E"],
-            ["P", "S", "S", "S", "T"],
-        ],
-        "clues_across": [
-            {"number": 1, "clue": "Collision", "length": 5, "row": 0, "col": 0},
-            {"number": 6, "clue": "Organ or resident", "length": 5, "row": 1, "col": 0},
-            {"number": 7, "clue": "Love deeply", "length": 5, "row": 2, "col": 0},
-            {"number": 8, "clue": "Judgment", "length": 5, "row": 3, "col": 0},
-            {"number": 9, "clue": "Quiet attention-getter", "length": 5, "row": 4, "col": 0},
-        ],
-        "clues_down": [
-            {"number": 1, "clue": "Groups or categories", "length": 5, "row": 0, "col": 0},
-            {"number": 2, "clue": "Horse riders", "length": 5, "row": 0, "col": 1},
-            {"number": 3, "clue": "Evade", "length": 5, "row": 0, "col": 2},
-            {"number": 4, "clue": "Not loose", "length": 5, "row": 0, "col": 3},
-            {"number": 5, "clue": "Listens to", "length": 5, "row": 0, "col": 4},
-        ],
-    },
-    # Puzzle 4: 5x5 - Easy
-    {
-        "title": "City Life",
-        "size": 5,
-        "difficulty": "easy",
-        "grid": [
-            [" ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " "],
-        ],
-        "solution": [
-            ["T", "R", "A", "I", "N"],
-            ["R", "I", "D", "E", "S"],
-            ["A", "D", "D", "E", "D"],
-            ["S", "E", "E", "R", "S"],
-            ["H", "S", "S", "S", "T"],
-        ],
-        "clues_across": [
-            {"number": 1, "clue": "Subway vehicle", "length": 5, "row": 0, "col": 0},
-            {"number": 6, "clue": "Travels in a car", "length": 5, "row": 1, "col": 0},
-            {"number": 7, "clue": "Put in more", "length": 5, "row": 2, "col": 0},
-            {"number": 8, "clue": "Prophets", "length": 5, "row": 3, "col": 0},
-            {"number": 9, "clue": "Sound for quiet", "length": 5, "row": 4, "col": 0},
-        ],
-        "clues_down": [
-            {"number": 1, "clue": "Garbage", "length": 5, "row": 0, "col": 0},
-            {"number": 2, "clue": "Motorcyclists", "length": 5, "row": 0, "col": 1},
-            {"number": 3, "clue": "Speech", "length": 5, "row": 0, "col": 2},
-            {"number": 4, "clue": "Odd", "length": 5, "row": 0, "col": 3},
-            {"number": 5, "clue": "Resting spots", "length": 5, "row": 0, "col": 4},
-        ],
-    },
-    # Puzzle 5: 5x5 - Medium
-    {
-        "title": "Food Fun",
-        "size": 5,
-        "difficulty": "medium",
-        "grid": [
-            [" ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " "],
-        ],
-        "solution": [
-            ["S", "P", "I", "C", "E"],
-            ["T", "O", "N", "E", "R"],
-            ["E", "P", "I", "C", "S"],
-            ["A", "E", "N", "A", "L"],
-            ["K", "S", "S", "S", "S"],
-        ],
-        "clues_across": [
-            {"number": 1, "clue": "Seasoning", "length": 5, "row": 0, "col": 0},
-            {"number": 6, "clue": "Printer supply", "length": 5, "row": 1, "col": 0},
-            {"number": 7, "clue": "Grand tales", "length": 5, "row": 2, "col": 0},
-            {"number": 8, "clue": "Kidney-related", "length": 5, "row": 3, "col": 0},
-            {"number": 9, "clue": "Hissing sounds", "length": 5, "row": 4, "col": 0},
-        ],
-        "clues_down": [
-            {"number": 1, "clue": "Meat cuts", "length": 5, "row": 0, "col": 0},
-            {"number": 2, "clue": "Begins (a door)", "length": 5, "row": 0, "col": 1},
-            {"number": 3, "clue": "Lodging places", "length": 5, "row": 0, "col": 2},
-            {"number": 4, "clue": "Film locations", "length": 5, "row": 0, "col": 3},
-            {"number": 5, "clue": "Cuts in two", "length": 5, "row": 0, "col": 4},
-        ],
-    },
-    # Puzzle 6: 5x5 - Medium
-    {
-        "title": "Pet Shop",
-        "size": 5,
-        "difficulty": "medium",
-        "grid": [
-            [" ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " "],
-        ],
-        "solution": [
-            ["C", "A", "G", "E", "S"],
-            ["A", "L", "O", "N", "E"],
-            ["T", "O", "N", "I", "C"],
-            ["S", "N", "A", "C", "K"],
-            ["H", "S", "S", "S", "S"],
-        ],
-        "clues_across": [
-            {"number": 1, "clue": "Bird enclosures", "length": 5, "row": 0, "col": 0},
-            {"number": 6, "clue": "Solitary", "length": 5, "row": 1, "col": 0},
-            {"number": 7, "clue": "Gin mixer", "length": 5, "row": 2, "col": 0},
-            {"number": 8, "clue": "Light bite", "length": 5, "row": 3, "col": 0},
-            {"number": 9, "clue": "Snake sounds", "length": 5, "row": 4, "col": 0},
-        ],
-        "clues_down": [
-            {"number": 1, "clue": "Felines", "length": 5, "row": 0, "col": 0},
-            {"number": 2, "clue": "On the way", "length": 5, "row": 0, "col": 1},
-            {"number": 3, "clue": "Previously", "length": 5, "row": 0, "col": 2},
-            {"number": 4, "clue": "Penny", "length": 5, "row": 0, "col": 3},
-            {"number": 5, "clue": "Bags (paper)", "length": 5, "row": 0, "col": 4},
-        ],
-    },
-    # Puzzle 7: 5x5 - Medium
-    {
-        "title": "Game Night",
-        "size": 5,
-        "difficulty": "medium",
-        "grid": [
-            [" ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " "],
-        ],
-        "solution": [
-            ["P", "L", "A", "Y", "S"],
-            ["R", "I", "V", "E", "R"],
-            ["I", "N", "E", "R", "T"],
-            ["C", "E", "N", "T", "S"],
-            ["E", "S", "S", "S", "S"],
-        ],
-        "clues_across": [
-            {"number": 1, "clue": "Theater shows", "length": 5, "row": 0, "col": 0},
-            {"number": 6, "clue": "Flowing water", "length": 5, "row": 1, "col": 0},
-            {"number": 7, "clue": "Not reactive", "length": 5, "row": 2, "col": 0},
-            {"number": 8, "clue": "Pennies", "length": 5, "row": 3, "col": 0},
-            {"number": 9, "clue": "Plural of S", "length": 5, "row": 4, "col": 0},
-        ],
-        "clues_down": [
-            {"number": 1, "clue": "Cost", "length": 5, "row": 0, "col": 0},
-            {"number": 2, "clue": "Queue", "length": 5, "row": 0, "col": 1},
-            {"number": 3, "clue": "Streets", "length": 5, "row": 0, "col": 2},
-            {"number": 4, "clue": "Yearly books", "length": 5, "row": 0, "col": 3},
-            {"number": 5, "clue": "Begins", "length": 5, "row": 0, "col": 4},
-        ],
-    },
-    # Puzzle 8: 5x5 - Medium
-    {
-        "title": "Nature Walk",
-        "size": 5,
-        "difficulty": "medium",
-        "grid": [
-            [" ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " "],
-        ],
-        "solution": [
-            ["T", "R", "E", "E", "S"],
-            ["H", "O", "N", "E", "Y"],
-            ["A", "N", "G", "E", "R"],
-            ["W", "E", "S", "T", "S"],
-            ["S", "S", "S", "S", "S"],
-        ],
-        "clues_across": [
-            {"number": 1, "clue": "Forest plants", "length": 5, "row": 0, "col": 0},
-            {"number": 6, "clue": "Sweet syrup", "length": 5, "row": 1, "col": 0},
-            {"number": 7, "clue": "Fury", "length": 5, "row": 2, "col": 0},
-            {"number": 8, "clue": "Compass directions", "length": 5, "row": 3, "col": 0},
-            {"number": 9, "clue": "Plural suffix sound", "length": 5, "row": 4, "col": 0},
-        ],
-        "clues_down": [
-            {"number": 1, "clue": "Melts", "length": 5, "row": 0, "col": 0},
-            {"number": 2, "clue": "One person", "length": 5, "row": 0, "col": 1},
-            {"number": 3, "clue": "Motor parts", "length": 5, "row": 0, "col": 2},
-            {"number": 4, "clue": "Consume", "length": 5, "row": 0, "col": 3},
-            {"number": 5, "clue": "Yell", "length": 5, "row": 0, "col": 4},
-        ],
-    },
-    # Puzzle 9: 5x5 - Hard
-    {
-        "title": "Brain Teaser",
-        "size": 5,
-        "difficulty": "hard",
-        "grid": [
-            [" ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " "],
-        ],
-        "solution": [
-            ["G", "R", "A", "S", "P"],
-            ["R", "O", "U", "T", "E"],
-            ["A", "U", "D", "I", "O"],
-            ["S", "T", "I", "L", "T"],
-            ["P", "E", "O", "N", "S"],
-        ],
-        "clues_across": [
-            {"number": 1, "clue": "Understand or grip", "length": 5, "row": 0, "col": 0},
-            {"number": 6, "clue": "Road or path", "length": 5, "row": 1, "col": 0},
-            {"number": 7, "clue": "Sound system", "length": 5, "row": 2, "col": 0},
-            {"number": 8, "clue": "Walking pole", "length": 5, "row": 3, "col": 0},
-            {"number": 9, "clue": "Low workers", "length": 5, "row": 4, "col": 0},
-        ],
-        "clues_down": [
-            {"number": 1, "clue": "Green plants", "length": 5, "row": 0, "col": 0},
-            {"number": 2, "clue": "Fight results", "length": 5, "row": 0, "col": 1},
-            {"number": 3, "clue": "Sound systems", "length": 5, "row": 0, "col": 2},
-            {"number": 4, "clue": "However", "length": 5, "row": 0, "col": 3},
-            {"number": 5, "clue": "Writing tools", "length": 5, "row": 0, "col": 4},
-        ],
-    },
-    # Puzzle 10: 5x5 - Hard
-    {
-        "title": "Word Master",
-        "size": 5,
-        "difficulty": "hard",
-        "grid": [
-            [" ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " "],
-        ],
-        "solution": [
-            ["S", "P", "A", "R", "E"],
-            ["T", "O", "N", "I", "C"],
-            ["A", "R", "E", "N", "A"],
-            ["R", "E", "W", "E", "D"],
-            ["E", "S", "S", "S", "S"],
-        ],
-        "clues_across": [
-            {"number": 1, "clue": "Extra or lean", "length": 5, "row": 0, "col": 0},
-            {"number": 6, "clue": "Fizzy water", "length": 5, "row": 1, "col": 0},
-            {"number": 7, "clue": "Sports venue", "length": 5, "row": 2, "col": 0},
-            {"number": 8, "clue": "Sewed again", "length": 5, "row": 3, "col": 0},
-            {"number": 9, "clue": "Letter sounds", "length": 5, "row": 4, "col": 0},
-        ],
-        "clues_down": [
-            {"number": 1, "clue": "Heavenly bodies", "length": 5, "row": 0, "col": 0},
-            {"number": 2, "clue": "Harbors", "length": 5, "row": 0, "col": 1},
-            {"number": 3, "clue": "Reply", "length": 5, "row": 0, "col": 2},
-            {"number": 4, "clue": "Matured", "length": 5, "row": 0, "col": 3},
-            {"number": 5, "clue": "Skilled", "length": 5, "row": 0, "col": 4},
-        ],
-    },
-    # Puzzle 11: 5x5 - Hard
-    {
-        "title": "Challenge",
-        "size": 5,
-        "difficulty": "hard",
-        "grid": [
-            [" ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " "],
-        ],
-        "solution": [
+            [".", "S", "T", "E", "W"],
             ["S", "T", "O", "R", "E"],
-            ["T", "I", "D", "E", "S"],
-            ["A", "G", "E", "N", "T"],
-            ["G", "E", "A", "R", "S"],
-            ["E", "S", "S", "S", "S"],
+            ["T", "O", "R", "E", "S"],
+            ["E", "R", "E", "C", "T"],
+            ["W", "E", "S", "T", "S"],
         ],
         "clues_across": [
-            {"number": 1, "clue": "Shop", "length": 5, "row": 0, "col": 0},
-            {"number": 6, "clue": "Ocean flows", "length": 5, "row": 1, "col": 0},
-            {"number": 7, "clue": "Spy or rep", "length": 5, "row": 2, "col": 0},
-            {"number": 8, "clue": "Equipment", "length": 5, "row": 3, "col": 0},
-            {"number": 9, "clue": "Hissing", "length": 5, "row": 4, "col": 0},
+            {"number": 1, "clue": "Hearty soup dish", "length": 4, "row": 0, "col": 1},
+            {"number": 5, "clue": "Shop or keep", "length": 5, "row": 1, "col": 0},
+            {"number": 6, "clue": "Rips apart", "length": 5, "row": 2, "col": 0},
+            {"number": 7, "clue": "Build or upright", "length": 5, "row": 3, "col": 0},
+            {"number": 8, "clue": "Western directions", "length": 5, "row": 4, "col": 0},
         ],
         "clues_down": [
-            {"number": 1, "clue": "Theater phases", "length": 5, "row": 0, "col": 0},
-            {"number": 2, "clue": "Felines", "length": 5, "row": 0, "col": 1},
-            {"number": 3, "clue": "Notions", "length": 5, "row": 0, "col": 2},
-            {"number": 4, "clue": "Makes money", "length": 5, "row": 0, "col": 3},
-            {"number": 5, "clue": "Checks", "length": 5, "row": 0, "col": 4},
+            {"number": 1, "clue": "Hearty soup dish", "length": 4, "row": 1, "col": 0},
+            {"number": 2, "clue": "Shop or keep", "length": 5, "row": 0, "col": 1},
+            {"number": 3, "clue": "Rips apart", "length": 5, "row": 0, "col": 2},
+            {"number": 4, "clue": "Build or upright", "length": 5, "row": 0, "col": 3},
+            {"number": 5, "clue": "Western directions", "length": 5, "row": 0, "col": 4},
         ],
     },
-    # Puzzle 12: 5x5 - Hard
+    # Puzzle 2: SCAR grid
     {
-        "title": "Grand Finale",
-        "size": 5,
-        "difficulty": "hard",
-        "grid": [
-            [" ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " "],
-        ],
-        "solution": [
-            ["B", "L", "A", "S", "T"],
-            ["R", "I", "V", "E", "R"],
-            ["A", "V", "E", "R", "S"],
-            ["I", "N", "E", "T", "S"],
-            ["N", "E", "S", "S", "S"],
-        ],
-        "clues_across": [
-            {"number": 1, "clue": "Explosion", "length": 5, "row": 0, "col": 0},
-            {"number": 6, "clue": "Stream", "length": 5, "row": 1, "col": 0},
-            {"number": 7, "clue": "States firmly", "length": 5, "row": 2, "col": 0},
-            {"number": 8, "clue": "Fish traps", "length": 5, "row": 3, "col": 0},
-            {"number": 9, "clue": "State suffix", "length": 5, "row": 4, "col": 0},
-        ],
-        "clues_down": [
-            {"number": 1, "clue": "Mind", "length": 5, "row": 0, "col": 0},
-            {"number": 2, "clue": "Surviving", "length": 5, "row": 0, "col": 1},
-            {"number": 3, "clue": "Typical", "length": 5, "row": 0, "col": 2},
-            {"number": 4, "clue": "Makes steady", "length": 5, "row": 0, "col": 3},
-            {"number": 5, "clue": "Experiments", "length": 5, "row": 0, "col": 4},
-        ],
-    },
-    # Additional puzzles for practice mode - varied difficulties
-    # Puzzle 13: Practice - Easy
-    {
-        "title": "Quick Quiz",
+        "title": "Battle Marks",
         "size": 5,
         "difficulty": "easy",
         "grid": [
-            [" ", " ", " ", " ", " "],
+            [".", " ", " ", " ", " "],
             [" ", " ", " ", " ", " "],
             [" ", " ", " ", " ", " "],
             [" ", " ", " ", " ", " "],
             [" ", " ", " ", " ", " "],
         ],
         "solution": [
-            ["B", "R", "E", "A", "D"],
-            ["L", "O", "V", "E", "R"],
-            ["A", "V", "E", "N", "T"],
-            ["R", "E", "N", "D", "S"],
-            ["E", "S", "S", "S", "S"],
+            [".", "S", "C", "A", "R"],
+            ["S", "C", "A", "R", "E"],
+            ["C", "A", "R", "E", "R"],
+            ["A", "R", "E", "N", "A"],
+            ["R", "E", "R", "A", "N"],
         ],
         "clues_across": [
-            {"number": 1, "clue": "Sliced loaf", "length": 5, "row": 0, "col": 0},
-            {"number": 6, "clue": "Romantic partner", "length": 5, "row": 1, "col": 0},
-            {"number": 7, "clue": "Happening", "length": 5, "row": 2, "col": 0},
-            {"number": 8, "clue": "Stylish", "length": 5, "row": 3, "col": 0},
-            {"number": 9, "clue": "Letter sound", "length": 5, "row": 4, "col": 0},
+            {"number": 1, "clue": "Wound mark", "length": 4, "row": 0, "col": 1},
+            {"number": 5, "clue": "Frighten", "length": 5, "row": 1, "col": 0},
+            {"number": 6, "clue": "One who provides care", "length": 5, "row": 2, "col": 0},
+            {"number": 7, "clue": "Sports stadium", "length": 5, "row": 3, "col": 0},
+            {"number": 8, "clue": "Ran again", "length": 5, "row": 4, "col": 0},
         ],
         "clues_down": [
-            {"number": 1, "clue": "Glare", "length": 5, "row": 0, "col": 0},
-            {"number": 2, "clue": "Stoves", "length": 5, "row": 0, "col": 1},
-            {"number": 3, "clue": "Forever", "length": 5, "row": 0, "col": 2},
-            {"number": 4, "clue": "Finishes", "length": 5, "row": 0, "col": 3},
-            {"number": 5, "clue": "Tears", "length": 5, "row": 0, "col": 4},
+            {"number": 1, "clue": "Wound mark", "length": 4, "row": 1, "col": 0},
+            {"number": 2, "clue": "Frighten", "length": 5, "row": 0, "col": 1},
+            {"number": 3, "clue": "One who provides care", "length": 5, "row": 0, "col": 2},
+            {"number": 4, "clue": "Sports stadium", "length": 5, "row": 0, "col": 3},
+            {"number": 5, "clue": "Ran again", "length": 5, "row": 0, "col": 4},
         ],
     },
-    # Puzzle 14: Practice - Medium
+    # Puzzle 3: RACE grid (includes Max Ernst)
     {
-        "title": "Think Fast",
+        "title": "Art & Speed",
         "size": 5,
         "difficulty": "medium",
         "grid": [
-            [" ", " ", " ", " ", " "],
+            [".", " ", " ", " ", " "],
             [" ", " ", " ", " ", " "],
             [" ", " ", " ", " ", " "],
             [" ", " ", " ", " ", " "],
             [" ", " ", " ", " ", " "],
         ],
         "solution": [
-            ["S", "L", "A", "T", "E"],
-            ["C", "O", "V", "E", "R"],
-            ["A", "R", "E", "N", "A"],
-            ["R", "E", "N", "D", "S"],
-            ["S", "S", "S", "S", "S"],
+            [".", "R", "A", "C", "E"],
+            ["R", "A", "C", "E", "R"],
+            ["A", "C", "O", "R", "N"],
+            ["C", "E", "R", "E", "S"],
+            ["E", "R", "N", "S", "T"],
         ],
         "clues_across": [
-            {"number": 1, "clue": "Chalkboard", "length": 5, "row": 0, "col": 0},
-            {"number": 6, "clue": "Hide or lid", "length": 5, "row": 1, "col": 0},
-            {"number": 7, "clue": "Stadium", "length": 5, "row": 2, "col": 0},
-            {"number": 8, "clue": "Gives", "length": 5, "row": 3, "col": 0},
-            {"number": 9, "clue": "Sibilants", "length": 5, "row": 4, "col": 0},
+            {"number": 1, "clue": "Competition of speed", "length": 4, "row": 0, "col": 1},
+            {"number": 5, "clue": "One who competes for speed", "length": 5, "row": 1, "col": 0},
+            {"number": 6, "clue": "Oak tree seed", "length": 5, "row": 2, "col": 0},
+            {"number": 7, "clue": "Roman goddess of harvest", "length": 5, "row": 3, "col": 0},
+            {"number": 8, "clue": "Surrealist painter Max ___", "length": 5, "row": 4, "col": 0},
         ],
         "clues_down": [
-            {"number": 1, "clue": "Frightens", "length": 5, "row": 0, "col": 0},
-            {"number": 2, "clue": "Lords", "length": 5, "row": 0, "col": 1},
-            {"number": 3, "clue": "Paths", "length": 5, "row": 0, "col": 2},
-            {"number": 4, "clue": "Renters", "length": 5, "row": 0, "col": 3},
-            {"number": 5, "clue": "Listens", "length": 5, "row": 0, "col": 4},
+            {"number": 1, "clue": "Competition of speed", "length": 4, "row": 1, "col": 0},
+            {"number": 2, "clue": "One who competes for speed", "length": 5, "row": 0, "col": 1},
+            {"number": 3, "clue": "Oak tree seed", "length": 5, "row": 0, "col": 2},
+            {"number": 4, "clue": "Roman goddess of harvest", "length": 5, "row": 0, "col": 3},
+            {"number": 5, "clue": "Surrealist painter Max ___", "length": 5, "row": 0, "col": 4},
+        ],
+    },
+    # Puzzle 4: PAST grid
+    {
+        "title": "Time Gone By",
+        "size": 5,
+        "difficulty": "easy",
+        "grid": [
+            [".", " ", " ", " ", " "],
+            [" ", " ", " ", " ", " "],
+            [" ", " ", " ", " ", " "],
+            [" ", " ", " ", " ", " "],
+            [" ", " ", " ", " ", " "],
+        ],
+        "solution": [
+            [".", "P", "A", "S", "T"],
+            ["P", "A", "S", "T", "E"],
+            ["A", "S", "T", "E", "R"],
+            ["S", "T", "E", "R", "N"],
+            ["T", "E", "R", "N", "S"],
+        ],
+        "clues_across": [
+            {"number": 1, "clue": "Gone by in time", "length": 4, "row": 0, "col": 1},
+            {"number": 5, "clue": "Glue or spread", "length": 5, "row": 1, "col": 0},
+            {"number": 6, "clue": "Star-shaped flower", "length": 5, "row": 2, "col": 0},
+            {"number": 7, "clue": "Rear of a ship", "length": 5, "row": 3, "col": 0},
+            {"number": 8, "clue": "Arctic birds", "length": 5, "row": 4, "col": 0},
+        ],
+        "clues_down": [
+            {"number": 1, "clue": "Gone by in time", "length": 4, "row": 1, "col": 0},
+            {"number": 2, "clue": "Glue or spread", "length": 5, "row": 0, "col": 1},
+            {"number": 3, "clue": "Star-shaped flower", "length": 5, "row": 0, "col": 2},
+            {"number": 4, "clue": "Rear of a ship", "length": 5, "row": 0, "col": 3},
+            {"number": 5, "clue": "Arctic birds", "length": 5, "row": 0, "col": 4},
+        ],
+    },
+    # Puzzle 5: FARE grid
+    {
+        "title": "Travel Costs",
+        "size": 5,
+        "difficulty": "medium",
+        "grid": [
+            [".", " ", " ", " ", " "],
+            [" ", " ", " ", " ", " "],
+            [" ", " ", " ", " ", " "],
+            [" ", " ", " ", " ", " "],
+            [" ", " ", " ", " ", " "],
+        ],
+        "solution": [
+            [".", "F", "A", "R", "E"],
+            ["F", "A", "R", "E", "R"],
+            ["A", "R", "E", "N", "A"],
+            ["R", "E", "N", "D", "S"],
+            ["E", "R", "A", "S", "E"],
+        ],
+        "clues_across": [
+            {"number": 1, "clue": "Bus or taxi price", "length": 4, "row": 0, "col": 1},
+            {"number": 5, "clue": "One who pays to travel", "length": 5, "row": 1, "col": 0},
+            {"number": 6, "clue": "Concert venue", "length": 5, "row": 2, "col": 0},
+            {"number": 7, "clue": "Tears apart", "length": 5, "row": 3, "col": 0},
+            {"number": 8, "clue": "Delete completely", "length": 5, "row": 4, "col": 0},
+        ],
+        "clues_down": [
+            {"number": 1, "clue": "Bus or taxi price", "length": 4, "row": 1, "col": 0},
+            {"number": 2, "clue": "One who pays to travel", "length": 5, "row": 0, "col": 1},
+            {"number": 3, "clue": "Concert venue", "length": 5, "row": 0, "col": 2},
+            {"number": 4, "clue": "Tears apart", "length": 5, "row": 0, "col": 3},
+            {"number": 5, "clue": "Delete completely", "length": 5, "row": 0, "col": 4},
+        ],
+    },
+    # Puzzle 6: CAST grid
+    {
+        "title": "Theater Night",
+        "size": 5,
+        "difficulty": "easy",
+        "grid": [
+            [".", " ", " ", " ", " "],
+            [" ", " ", " ", " ", " "],
+            [" ", " ", " ", " ", " "],
+            [" ", " ", " ", " ", " "],
+            [" ", " ", " ", " ", " "],
+        ],
+        "solution": [
+            [".", "C", "A", "S", "T"],
+            ["C", "A", "S", "T", "E"],
+            ["A", "S", "T", "E", "R"],
+            ["S", "T", "E", "R", "N"],
+            ["T", "E", "R", "N", "S"],
+        ],
+        "clues_across": [
+            {"number": 1, "clue": "Actors in a play", "length": 4, "row": 0, "col": 1},
+            {"number": 5, "clue": "Social class system", "length": 5, "row": 1, "col": 0},
+            {"number": 6, "clue": "Daisy-like flower", "length": 5, "row": 2, "col": 0},
+            {"number": 7, "clue": "Serious or strict", "length": 5, "row": 3, "col": 0},
+            {"number": 8, "clue": "Seabirds", "length": 5, "row": 4, "col": 0},
+        ],
+        "clues_down": [
+            {"number": 1, "clue": "Actors in a play", "length": 4, "row": 1, "col": 0},
+            {"number": 2, "clue": "Social class system", "length": 5, "row": 0, "col": 1},
+            {"number": 3, "clue": "Daisy-like flower", "length": 5, "row": 0, "col": 2},
+            {"number": 4, "clue": "Serious or strict", "length": 5, "row": 0, "col": 3},
+            {"number": 5, "clue": "Seabirds", "length": 5, "row": 0, "col": 4},
+        ],
+    },
+    # Puzzle 7: SPAR grid
+    {
+        "title": "Boxing Ring",
+        "size": 5,
+        "difficulty": "medium",
+        "grid": [
+            [".", " ", " ", " ", " "],
+            [" ", " ", " ", " ", " "],
+            [" ", " ", " ", " ", " "],
+            [" ", " ", " ", " ", " "],
+            [" ", " ", " ", " ", " "],
+        ],
+        "solution": [
+            [".", "S", "P", "A", "R"],
+            ["S", "P", "A", "R", "E"],
+            ["P", "A", "R", "E", "R"],
+            ["A", "R", "E", "N", "A"],
+            ["R", "E", "R", "A", "N"],
+        ],
+        "clues_across": [
+            {"number": 1, "clue": "Practice boxing", "length": 4, "row": 0, "col": 1},
+            {"number": 5, "clue": "Extra or leftover", "length": 5, "row": 1, "col": 0},
+            {"number": 6, "clue": "Fruit peeling tool", "length": 5, "row": 2, "col": 0},
+            {"number": 7, "clue": "Gladiator's battleground", "length": 5, "row": 3, "col": 0},
+            {"number": 8, "clue": "Competed again in a race", "length": 5, "row": 4, "col": 0},
+        ],
+        "clues_down": [
+            {"number": 1, "clue": "Practice boxing", "length": 4, "row": 1, "col": 0},
+            {"number": 2, "clue": "Extra or leftover", "length": 5, "row": 0, "col": 1},
+            {"number": 3, "clue": "Fruit peeling tool", "length": 5, "row": 0, "col": 2},
+            {"number": 4, "clue": "Gladiator's battleground", "length": 5, "row": 0, "col": 3},
+            {"number": 5, "clue": "Competed again in a race", "length": 5, "row": 0, "col": 4},
+        ],
+    },
+    # Puzzle 8: RARE grid
+    {
+        "title": "Uncommon Finds",
+        "size": 5,
+        "difficulty": "medium",
+        "grid": [
+            [".", " ", " ", " ", " "],
+            [" ", " ", " ", " ", " "],
+            [" ", " ", " ", " ", " "],
+            [" ", " ", " ", " ", " "],
+            [" ", " ", " ", " ", " "],
+        ],
+        "solution": [
+            [".", "R", "A", "R", "E"],
+            ["R", "A", "R", "E", "R"],
+            ["A", "R", "E", "N", "A"],
+            ["R", "E", "N", "D", "S"],
+            ["E", "R", "A", "S", "E"],
+        ],
+        "clues_across": [
+            {"number": 1, "clue": "Not common", "length": 4, "row": 0, "col": 1},
+            {"number": 5, "clue": "More uncommon", "length": 5, "row": 1, "col": 0},
+            {"number": 6, "clue": "Sports complex", "length": 5, "row": 2, "col": 0},
+            {"number": 7, "clue": "Splits or tears", "length": 5, "row": 3, "col": 0},
+            {"number": 8, "clue": "Wipe out", "length": 5, "row": 4, "col": 0},
+        ],
+        "clues_down": [
+            {"number": 1, "clue": "Not common", "length": 4, "row": 1, "col": 0},
+            {"number": 2, "clue": "More uncommon", "length": 5, "row": 0, "col": 1},
+            {"number": 3, "clue": "Sports complex", "length": 5, "row": 0, "col": 2},
+            {"number": 4, "clue": "Splits or tears", "length": 5, "row": 0, "col": 3},
+            {"number": 5, "clue": "Wipe out", "length": 5, "row": 0, "col": 4},
+        ],
+    },
+    # Puzzle 9: BAST grid
+    {
+        "title": "Natural Fibers",
+        "size": 5,
+        "difficulty": "hard",
+        "grid": [
+            [".", " ", " ", " ", " "],
+            [" ", " ", " ", " ", " "],
+            [" ", " ", " ", " ", " "],
+            [" ", " ", " ", " ", " "],
+            [" ", " ", " ", " ", " "],
+        ],
+        "solution": [
+            [".", "B", "A", "S", "T"],
+            ["B", "A", "S", "T", "E"],
+            ["A", "S", "T", "E", "R"],
+            ["S", "T", "E", "R", "N"],
+            ["T", "E", "R", "N", "S"],
+        ],
+        "clues_across": [
+            {"number": 1, "clue": "Plant fiber for rope", "length": 4, "row": 0, "col": 1},
+            {"number": 5, "clue": "Moisten while roasting", "length": 5, "row": 1, "col": 0},
+            {"number": 6, "clue": "Fall blooming flower", "length": 5, "row": 2, "col": 0},
+            {"number": 7, "clue": "Back of a boat", "length": 5, "row": 3, "col": 0},
+            {"number": 8, "clue": "Arctic seabirds", "length": 5, "row": 4, "col": 0},
+        ],
+        "clues_down": [
+            {"number": 1, "clue": "Plant fiber for rope", "length": 4, "row": 1, "col": 0},
+            {"number": 2, "clue": "Moisten while roasting", "length": 5, "row": 0, "col": 1},
+            {"number": 3, "clue": "Fall blooming flower", "length": 5, "row": 0, "col": 2},
+            {"number": 4, "clue": "Back of a boat", "length": 5, "row": 0, "col": 3},
+            {"number": 5, "clue": "Arctic seabirds", "length": 5, "row": 0, "col": 4},
         ],
     },
 ]
@@ -498,15 +326,12 @@ PUZZLES = [
 
 def seed_puzzles(db):
     """Seed the database with sample puzzles."""
+    print("Clearing existing puzzles...")
+    db.query(Puzzle).delete()
+    db.commit()
+
     print("Seeding puzzles...")
-
     for i, puzzle_data in enumerate(PUZZLES):
-        # Check if puzzle already exists
-        existing = db.query(Puzzle).filter(Puzzle.title == puzzle_data["title"]).first()
-        if existing:
-            print(f"  Puzzle '{puzzle_data['title']}' already exists, skipping...")
-            continue
-
         puzzle = Puzzle(
             title=puzzle_data["title"],
             size=puzzle_data["size"],
@@ -515,11 +340,10 @@ def seed_puzzles(db):
             solution=json.dumps(puzzle_data["solution"]),
             clues_across=json.dumps(puzzle_data["clues_across"]),
             clues_down=json.dumps(puzzle_data["clues_down"]),
-            scheduled_date=None,  # Unscheduled - will be selected by date hash
+            scheduled_date=None,
         )
-
         db.add(puzzle)
-        print(f"  Added puzzle: {puzzle_data['title']} ({puzzle_data['size']}x{puzzle_data['size']}, {puzzle_data['difficulty']})")
+        print(f"  Added: {puzzle_data['title']} ({puzzle_data['difficulty']})")
 
     db.commit()
     print(f"Seeded {len(PUZZLES)} puzzles.")
@@ -528,7 +352,6 @@ def seed_puzzles(db):
 def seed_sample_users(db):
     """Seed some sample users for testing."""
     print("Seeding sample users...")
-
     sample_users = [
         {"username": "alice", "email": "alice@example.com", "password": "password123"},
         {"username": "bob", "email": "bob@example.com", "password": "password123"},
@@ -563,10 +386,6 @@ def main():
         seed_puzzles(db)
         seed_sample_users(db)
         print("\nSeeding complete!")
-        print("\nSample login credentials:")
-        print("  Username: alice, Password: password123")
-        print("  Username: bob, Password: password123")
-        print("  Username: charlie, Password: password123")
     finally:
         db.close()
 
