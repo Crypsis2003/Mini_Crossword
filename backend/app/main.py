@@ -5,10 +5,10 @@ import os
 from pathlib import Path
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
 
 from app.config import get_settings
 from app.database import init_db
@@ -23,36 +23,32 @@ logger = logging.getLogger(__name__)
 settings = get_settings()
 
 # Determine paths - works both locally and on Render
-# When running from backend/, frontend is at ../frontend
-# When running from repo root, frontend is at ./frontend
 APP_DIR = Path(__file__).resolve().parent
 BACKEND_DIR = APP_DIR.parent
 PROJECT_ROOT = BACKEND_DIR.parent
 FRONTEND_DIR = PROJECT_ROOT / "frontend"
 
-# Fallback if frontend is not found at expected location
-if not FRONTEND_DIR.exists():
-    # Try relative to current working directory
-    FRONTEND_DIR = Path.cwd().parent / "frontend"
-    if not FRONTEND_DIR.exists():
-        FRONTEND_DIR = Path.cwd() / "frontend"
+# Log the paths for debugging
+logger.info(f"APP_DIR: {APP_DIR}")
+logger.info(f"BACKEND_DIR: {BACKEND_DIR}")
+logger.info(f"PROJECT_ROOT: {PROJECT_ROOT}")
+logger.info(f"FRONTEND_DIR: {FRONTEND_DIR}")
+logger.info(f"FRONTEND_DIR exists: {FRONTEND_DIR.exists()}")
 
-logger.info(f"Frontend directory: {FRONTEND_DIR}")
+if FRONTEND_DIR.exists():
+    logger.info(f"Frontend contents: {list(FRONTEND_DIR.iterdir())}")
 
 
 def seed_database_if_needed():
     """Seed the database with initial puzzles if empty."""
-    from sqlalchemy.orm import Session
     from app.database import SessionLocal
     from app.models.puzzle import Puzzle
 
     db = SessionLocal()
     try:
-        # Check if puzzles exist
         puzzle_count = db.query(Puzzle).count()
         if puzzle_count == 0:
             logger.info("No puzzles found, seeding database...")
-            # Import and run seed data
             import sys
             sys.path.insert(0, str(BACKEND_DIR))
             from seed_data import seed_puzzles
@@ -69,16 +65,11 @@ def seed_database_if_needed():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan events."""
-    # Startup
     logger.info("Starting application...")
     init_db()
     logger.info("Database initialized")
-
-    # Seed database if needed (for fresh deployments)
     seed_database_if_needed()
-
     yield
-    # Shutdown
     logger.info("Shutting down application...")
 
 
@@ -89,8 +80,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS middleware - allow all origins for simplicity
-# In production, you might want to restrict this to your domain
+# CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -99,29 +89,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Import and include routers
+# Import and include API routers FIRST
 from app.routers import auth_router, puzzles_router, friends_router, leaderboard_router
 
 app.include_router(auth_router, prefix="/api")
 app.include_router(puzzles_router, prefix="/api")
 app.include_router(friends_router, prefix="/api")
 app.include_router(leaderboard_router, prefix="/api")
-
-# Mount static files for frontend
-if FRONTEND_DIR.exists():
-    app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR)), name="static")
-    logger.info(f"Mounted static files from {FRONTEND_DIR}")
-else:
-    logger.warning(f"Frontend directory not found at {FRONTEND_DIR}")
-
-
-@app.get("/")
-async def root():
-    """Serve the main frontend page."""
-    index_path = FRONTEND_DIR / "index.html"
-    if index_path.exists():
-        return FileResponse(str(index_path))
-    return {"message": "Daily Mini Crossword API", "docs": "/docs"}
 
 
 @app.get("/api/health")
@@ -130,12 +104,42 @@ async def health_check():
     return {"status": "healthy", "app": settings.app_name}
 
 
+# Serve index.html for root
+@app.get("/", response_class=HTMLResponse)
+@app.head("/")
+async def serve_index():
+    """Serve the main frontend page."""
+    index_path = FRONTEND_DIR / "index.html"
+    logger.info(f"Serving index from: {index_path}, exists: {index_path.exists()}")
+    if index_path.exists():
+        return FileResponse(str(index_path), media_type="text/html")
+    return HTMLResponse(content="<h1>Daily Mini Crossword API</h1><p>Frontend not found. API docs at <a href='/docs'>/docs</a></p>", status_code=200)
+
+
+# Serve static files (CSS, JS)
+if FRONTEND_DIR.exists():
+    # Mount CSS directory
+    css_dir = FRONTEND_DIR / "css"
+    if css_dir.exists():
+        app.mount("/static/css", StaticFiles(directory=str(css_dir)), name="css")
+        logger.info(f"Mounted CSS from {css_dir}")
+
+    # Mount JS directory
+    js_dir = FRONTEND_DIR / "js"
+    if js_dir.exists():
+        app.mount("/static/js", StaticFiles(directory=str(js_dir)), name="js")
+        logger.info(f"Mounted JS from {js_dir}")
+
+    # Also mount the whole frontend directory for any other static files
+    app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR)), name="static")
+    logger.info(f"Mounted static files from {FRONTEND_DIR}")
+else:
+    logger.warning(f"Frontend directory not found at {FRONTEND_DIR}")
+
+
 if __name__ == "__main__":
     import uvicorn
-
-    # Use PORT from environment (Render sets this)
     port = int(os.environ.get("PORT", settings.port))
-
     uvicorn.run(
         "app.main:app",
         host="0.0.0.0",
