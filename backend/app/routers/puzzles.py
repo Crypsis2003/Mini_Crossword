@@ -12,6 +12,7 @@ from app.schemas.puzzle import PuzzlePlay, PuzzleCreate, PuzzleResponse
 from app.schemas.solve import SolveCreate, SolveResult
 from app.services.puzzle_service import PuzzleService
 from app.services.stats_service import StatsService
+from app.services.puzzle_cache import ensure_weekly_cache
 from app.utils.auth import get_current_user, get_current_user_optional
 from app.models.user import User
 
@@ -26,6 +27,9 @@ def get_today_puzzle(
     current_user: Optional[User] = Depends(get_current_user_optional),
 ):
     """Get today's puzzle (playable version without solution)."""
+    # Ensure weekly cache is populated (auto-generates if missing)
+    ensure_weekly_cache(db)
+
     puzzle_service = PuzzleService(db)
     puzzle = puzzle_service.get_today_puzzle()
 
