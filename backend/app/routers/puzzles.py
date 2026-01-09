@@ -39,6 +39,38 @@ def list_all_puzzles(db: Session = Depends(get_db)):
     ]
 
 
+@router.post("/refresh")
+def refresh_puzzles(db: Session = Depends(get_db)):
+    """Force refresh puzzles for current week. Hit this endpoint to regenerate."""
+    from app.models.puzzle import Puzzle
+    from app.models.cache_meta import PuzzleCacheMeta
+    from app.services.puzzle_cache import get_current_week_key, ensure_weekly_cache
+
+    week_key = get_current_week_key()
+
+    # Delete existing puzzles and cache meta for this week
+    deleted_puzzles = db.query(Puzzle).filter(Puzzle.week_key == week_key).delete()
+    deleted_meta = db.query(PuzzleCacheMeta).filter(PuzzleCacheMeta.week_key == week_key).delete()
+    db.commit()
+
+    # Regenerate
+    ensure_weekly_cache(db)
+
+    # Get new puzzles
+    puzzles = db.query(Puzzle).filter(Puzzle.week_key == week_key).order_by(Puzzle.scheduled_date).all()
+
+    return {
+        "success": True,
+        "week_key": week_key,
+        "deleted_puzzles": deleted_puzzles,
+        "new_puzzles": len(puzzles),
+        "puzzles": [
+            {"id": p.id, "date": str(p.scheduled_date), "title": p.title}
+            for p in puzzles
+        ]
+    }
+
+
 @router.get("/today", response_model=PuzzlePlay)
 def get_today_puzzle(
     db: Session = Depends(get_db),
