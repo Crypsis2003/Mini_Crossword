@@ -98,6 +98,19 @@ make run
 make dev
 ```
 
+### Option 4: Deploy to Render (Production)
+
+Deploy to [Render](https://render.com) with a free PostgreSQL database:
+
+```bash
+# Push to GitHub, then on Render:
+# 1. New → Blueprint
+# 2. Connect your repo
+# 3. Render detects render.yaml and deploys automatically
+```
+
+See **[README_DEPLOY.md](README_DEPLOY.md)** for detailed deployment instructions.
+
 ## API Endpoints
 
 ### Authentication

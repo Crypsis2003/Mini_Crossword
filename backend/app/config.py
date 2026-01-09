@@ -3,6 +3,7 @@
 from functools import lru_cache
 from typing import Optional
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -21,7 +22,16 @@ class Settings(BaseSettings):
     secret_key: str = "change-me-in-production-min-32-characters"
 
     # Database
+    # Render provides DATABASE_URL in postgres:// format, but SQLAlchemy needs postgresql://
     database_url: str = "sqlite:///./crossword.db"
+
+    @field_validator("database_url", mode="before")
+    @classmethod
+    def fix_postgres_url(cls, v: str) -> str:
+        """Convert postgres:// to postgresql:// for SQLAlchemy compatibility."""
+        if v and v.startswith("postgres://"):
+            return v.replace("postgres://", "postgresql://", 1)
+        return v
 
     # JWT
     jwt_secret_key: str = "change-me-jwt-secret-key"
