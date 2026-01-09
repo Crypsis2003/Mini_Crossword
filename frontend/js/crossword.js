@@ -14,11 +14,12 @@ const Crossword = {
     hasStarted: false,
     isRevealed: false,
     hintsUsed: 0,
+    isPracticeMode: false,
 
     /**
      * Initialize the crossword with a puzzle.
      */
-    init(puzzle) {
+    init(puzzle, isPractice = false) {
         this.puzzle = puzzle;
         this.solution = null;
         this.grid = [];
@@ -29,6 +30,7 @@ const Crossword = {
         this.isRevealed = false;
         this.hintsUsed = 0;
         this.elapsedMs = 0;
+        this.isPracticeMode = isPractice;
         this.stopTimer();
 
         // Initialize grid state
@@ -562,6 +564,10 @@ const Crossword = {
         if (this.isRevealed) {
             document.getElementById('timer').classList.add('invalidated');
             this.showCompletionModal({ time_ms: this.elapsedMs, revealed: true });
+        } else if (this.isPracticeMode) {
+            // Practice mode - don't submit to leaderboard
+            document.getElementById('timer').classList.add('completed');
+            this.showCompletionModal({ time_ms: this.elapsedMs, practice: true });
         } else {
             document.getElementById('timer').classList.add('completed');
 
@@ -592,16 +598,25 @@ const Crossword = {
         const titleEl = document.getElementById('completion-title-text');
         const iconEl = document.getElementById('completion-icon');
         const rankEl = document.getElementById('completion-rank');
+        const leaderboardBtn = document.getElementById('btn-view-leaderboard');
 
         if (result.revealed || this.isRevealed) {
             titleEl.textContent = 'Puzzle Revealed';
             iconEl.textContent = '👁';
             timeEl.classList.add('invalidated');
             rankEl.textContent = 'Time not recorded (reveal used)';
+            leaderboardBtn.classList.remove('hidden');
+        } else if (result.practice || this.isPracticeMode) {
+            titleEl.textContent = 'Practice Complete!';
+            iconEl.textContent = '🎯';
+            timeEl.classList.remove('invalidated');
+            rankEl.textContent = 'Practice mode - not recorded on leaderboard';
+            leaderboardBtn.classList.add('hidden');
         } else {
             titleEl.textContent = 'Puzzle Complete!';
             iconEl.textContent = '🎉';
             timeEl.classList.remove('invalidated');
+            leaderboardBtn.classList.remove('hidden');
 
             if (result.rank) {
                 rankEl.textContent = `You ranked #${result.rank}!`;
@@ -663,6 +678,22 @@ const Crossword = {
     },
 
     /**
+     * Fetch and cache the solution from the server.
+     */
+    async fetchSolution() {
+        if (this.solution) return this.solution;
+
+        try {
+            const result = await API.puzzles.getSolution(this.puzzle.id);
+            this.solution = result.solution;
+            return this.solution;
+        } catch (e) {
+            console.error('Error fetching solution:', e);
+            return null;
+        }
+    },
+
+    /**
      * Give a hint - reveal one letter in the current word.
      */
     async hint() {
@@ -672,80 +703,44 @@ const Crossword = {
         }
 
         // Fetch solution if we don't have it
-        if (!this.solution) {
-            try {
-                const result = await API.puzzles.check(this.puzzle.id, this.grid);
-                // We need to get the solution from the server
-                // For hints, we'll check each cell individually
-            } catch (e) {
-                App.showToast('Error getting hint', 'error');
-                return;
-            }
+        const solution = await this.fetchSolution();
+        if (!solution) {
+            App.showToast('Error getting hint', 'error');
+            return;
         }
 
         const wordCells = this.getWordCells(this.selectedCell.row, this.selectedCell.col, this.direction);
 
         // Find an empty or incorrect cell in the current word
         for (const { r, c } of wordCells) {
-            if (!this.grid[r][c]) {
-                // Try to get the correct letter by checking with server
-                await this.revealCell(r, c);
+            if (!this.grid[r][c] || this.grid[r][c] !== solution[r][c]) {
+                this.revealCell(r, c, solution[r][c]);
                 this.hintsUsed++;
                 App.showToast('Hint revealed!', 'info');
                 return;
             }
         }
 
-        // If all cells are filled, check for incorrect ones
-        try {
-            const result = await API.puzzles.check(this.puzzle.id, this.grid);
-            for (const { r, c } of wordCells) {
-                if (result.incorrect_cells.some(([ir, ic]) => ir === r && ic === c)) {
-                    await this.revealCell(r, c);
-                    this.hintsUsed++;
-                    App.showToast('Hint: corrected a letter!', 'info');
-                    return;
-                }
-            }
-            App.showToast('This word is already correct!', 'success');
-        } catch (e) {
-            App.showToast('Error getting hint', 'error');
-        }
+        App.showToast('This word is already correct!', 'success');
     },
 
     /**
-     * Reveal a single cell by finding its correct letter.
+     * Reveal a single cell with the given letter.
      */
-    async revealCell(row, col) {
-        // Try each letter until we find the correct one
-        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        const originalValue = this.grid[row][col];
+    revealCell(row, col, letter) {
+        this.grid[row][col] = letter;
 
-        for (const letter of letters) {
-            this.grid[row][col] = letter;
-            try {
-                const result = await API.puzzles.check(this.puzzle.id, this.grid);
-                const isIncorrect = result.incorrect_cells.some(([r, c]) => r === row && c === col);
-                if (!isIncorrect) {
-                    // Found the correct letter
-                    const input = document.querySelector(`.cell-input[data-row="${row}"][data-col="${col}"]`);
-                    if (input) {
-                        input.value = letter;
-                    }
-                    const cell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
-                    if (cell) {
-                        cell.classList.add('revealed');
-                    }
-                    this.checkCompletion();
-                    return;
-                }
-            } catch (e) {
-                // Continue trying
-            }
+        const input = document.querySelector(`.cell-input[data-row="${row}"][data-col="${col}"]`);
+        if (input) {
+            input.value = letter;
         }
 
-        // Restore original if nothing found
-        this.grid[row][col] = originalValue;
+        const cell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
+        if (cell) {
+            cell.classList.add('revealed');
+        }
+
+        this.checkCompletion();
     },
 
     /**
@@ -759,13 +754,18 @@ const Crossword = {
         this.isRevealed = true;
         document.getElementById('timer').classList.add('invalidated');
 
-        // Reveal all cells by trying each one
-        App.showToast('Revealing solution...', 'info');
+        // Fetch solution from server (single API call)
+        const solution = await this.fetchSolution();
+        if (!solution) {
+            App.showToast('Error revealing solution', 'error');
+            return;
+        }
 
+        // Reveal all cells instantly using cached solution
         for (let row = 0; row < this.puzzle.size; row++) {
             for (let col = 0; col < this.puzzle.size; col++) {
                 if (this.puzzle.grid[row][col] !== '.') {
-                    await this.revealCell(row, col);
+                    this.revealCell(row, col, solution[row][col]);
                 }
             }
         }

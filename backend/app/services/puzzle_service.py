@@ -2,11 +2,13 @@
 
 import json
 import hashlib
+import random
 from datetime import date, datetime
 from typing import Optional
 
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 from app.models.puzzle import Puzzle
 from app.schemas.puzzle import PuzzleCreate, ClueItem
@@ -146,3 +148,18 @@ class PuzzleService:
         self.db.refresh(puzzle)
 
         return puzzle
+
+    def get_random_practice_puzzle(self, exclude_puzzle_id: Optional[int] = None) -> Optional[Puzzle]:
+        """Get a random puzzle for practice mode (excludes today's puzzle)."""
+        query = self.db.query(Puzzle)
+
+        if exclude_puzzle_id:
+            query = query.filter(Puzzle.id != exclude_puzzle_id)
+
+        # Get all available puzzles
+        puzzles = query.all()
+
+        if not puzzles:
+            return None
+
+        return random.choice(puzzles)

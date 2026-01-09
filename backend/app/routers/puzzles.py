@@ -80,6 +80,41 @@ def get_puzzle_by_date(
     )
 
 
+@router.get("/practice/random", response_model=PuzzlePlay)
+def get_practice_puzzle(
+    exclude: Optional[int] = None,
+    db: Session = Depends(get_db),
+):
+    """Get a random puzzle for practice mode (not recorded on leaderboard)."""
+    puzzle_service = PuzzleService(db)
+
+    # If no exclude specified, exclude today's puzzle
+    if exclude is None:
+        today_puzzle = puzzle_service.get_today_puzzle()
+        exclude = today_puzzle.id if today_puzzle else None
+
+    puzzle = puzzle_service.get_random_practice_puzzle(exclude_puzzle_id=exclude)
+
+    if not puzzle:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No practice puzzles available",
+        )
+
+    parsed = puzzle_service.parse_puzzle(puzzle)
+
+    return PuzzlePlay(
+        id=parsed["id"],
+        title=parsed["title"],
+        size=parsed["size"],
+        difficulty=parsed["difficulty"],
+        scheduled_date=parsed["scheduled_date"],
+        grid=parsed["grid"],
+        clues_across=parsed["clues_across"],
+        clues_down=parsed["clues_down"],
+    )
+
+
 @router.get("/{puzzle_id}", response_model=PuzzlePlay)
 def get_puzzle(
     puzzle_id: int,
@@ -205,4 +240,26 @@ def get_my_solve(
         "time_ms": solve.time_ms,
         "completed_at": solve.completed_at,
         "attempt_count": solve.attempt_count,
+    }
+
+
+@router.get("/{puzzle_id}/solution")
+def get_puzzle_solution(
+    puzzle_id: int,
+    db: Session = Depends(get_db),
+):
+    """Get puzzle solution (for reveal functionality)."""
+    puzzle_service = PuzzleService(db)
+    puzzle = puzzle_service.get_by_id(puzzle_id)
+
+    if not puzzle:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Puzzle not found",
+        )
+
+    parsed = puzzle_service.parse_puzzle(puzzle)
+
+    return {
+        "solution": parsed["solution"],
     }

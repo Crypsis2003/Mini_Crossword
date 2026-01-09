@@ -183,6 +183,15 @@ const API = {
         async getMySolve(puzzleId) {
             return API.request(`/puzzles/${puzzleId}/my-solve`);
         },
+
+        async getSolution(puzzleId) {
+            return API.request(`/puzzles/${puzzleId}/solution`);
+        },
+
+        async getPractice(excludeId = null) {
+            const url = excludeId ? `/puzzles/practice/random?exclude=${excludeId}` : '/puzzles/practice/random';
+            return API.request(url);
+        },
     },
 
     // Friends endpoints

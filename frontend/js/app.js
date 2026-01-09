@@ -84,6 +84,11 @@ const App = {
             this.navigate('leaderboard');
         });
 
+        document.getElementById('btn-play-another').addEventListener('click', () => {
+            document.getElementById('completion-modal').classList.remove('active');
+            this.loadPracticePuzzle();
+        });
+
         // Add friend button
         document.getElementById('btn-add-friend').addEventListener('click', () => this.handleAddFriend());
 
@@ -142,7 +147,7 @@ const App = {
             document.getElementById('puzzle-meta').textContent =
                 `${puzzle.size}x${puzzle.size} • ${puzzle.difficulty}`;
 
-            Crossword.init(puzzle);
+            Crossword.init(puzzle, false);
 
             // Check if user has already solved
             if (Auth.isLoggedIn()) {
@@ -155,6 +160,27 @@ const App = {
             console.error('Error loading puzzle:', e);
             document.getElementById('puzzle-title').textContent = 'No puzzle available';
             document.getElementById('puzzle-meta').textContent = 'Check back later';
+        }
+    },
+
+    /**
+     * Load a random practice puzzle.
+     */
+    async loadPracticePuzzle() {
+        try {
+            // Exclude current puzzle if we have one
+            const excludeId = Crossword.puzzle ? Crossword.puzzle.id : null;
+            const puzzle = await API.puzzles.getPractice(excludeId);
+
+            document.getElementById('puzzle-title').textContent = puzzle.title;
+            document.getElementById('puzzle-meta').textContent =
+                `${puzzle.size}x${puzzle.size} • ${puzzle.difficulty} • Practice Mode`;
+
+            Crossword.init(puzzle, true);
+            this.showToast('Practice mode - time not recorded on leaderboard', 'info');
+        } catch (e) {
+            console.error('Error loading practice puzzle:', e);
+            this.showToast('No more practice puzzles available', 'error');
         }
     },
 
@@ -498,12 +524,11 @@ const App = {
      * Apply a theme to the page.
      */
     applyTheme(theme) {
-        // Remove all theme classes
-        document.body.classList.remove('theme-plants', 'theme-ocean', 'theme-football');
-
-        // Add new theme class (except for default)
-        if (theme !== 'default') {
-            document.body.classList.add(`theme-${theme}`);
+        // Set data-theme attribute on document element
+        if (theme === 'default') {
+            document.documentElement.removeAttribute('data-theme');
+        } else {
+            document.documentElement.setAttribute('data-theme', theme);
         }
 
         // Update active state on buttons
