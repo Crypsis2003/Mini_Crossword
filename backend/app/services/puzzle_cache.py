@@ -15,10 +15,11 @@ from app.models.cache_meta import PuzzleCacheMeta, DictionaryWord
 logger = logging.getLogger(__name__)
 
 # Constants
-PUZZLE_COUNT = 25
+PUZZLE_COUNT = 7  # One per day of the week
 GENERATION_TIMEOUT_MINUTES = 10
 MIN_WORD_LENGTH = 3
 MAX_WORD_LENGTH = 7
+MAX_WORDS_PER_LENGTH = 3000  # Limit word list size for speed
 
 # Public word list URL (MIT licensed)
 WORD_LIST_URL = "https://raw.githubusercontent.com/dwyl/english-words/master/words_alpha.txt"
@@ -195,8 +196,8 @@ def _refresh_weekly_cache(db: Session, week_key: str) -> int:
     if deleted:
         logger.info(f"Deleted {deleted} existing puzzles for {week_key}")
 
-    # Generate new puzzles
-    puzzles = generate_puzzle_set(db, n=PUZZLE_COUNT)
+    # Generate new puzzles (one per day)
+    puzzles = generate_puzzle_set(db, n=PUZZLE_COUNT, week_key=week_key)
 
     # Insert into database
     for i, puzzle_data in enumerate(puzzles):
@@ -209,7 +210,7 @@ def _refresh_weekly_cache(db: Session, week_key: str) -> int:
             clues_across=json.dumps(puzzle_data["clues_across"]),
             clues_down=json.dumps(puzzle_data["clues_down"]),
             week_key=week_key,
-            scheduled_date=None,
+            scheduled_date=puzzle_data.get("scheduled_date"),
         )
         db.add(puzzle)
 
@@ -227,20 +228,52 @@ def _refresh_weekly_cache(db: Session, week_key: str) -> int:
     return len(puzzles)
 
 
-def generate_puzzle_set(db: Session, n: int = 25) -> list[dict]:
+def get_week_dates(week_key: str) -> list[date]:
+    """Get all 7 dates for a given week key."""
+    from datetime import timedelta
+    # Parse week key like "2026-W02"
+    year, week = week_key.split("-W")
+    year = int(year)
+    week = int(week)
+    # Get Monday of that week
+    jan1 = date(year, 1, 1)
+    # Days to first Monday
+    days_to_monday = (7 - jan1.weekday()) % 7
+    first_monday = jan1 + timedelta(days=days_to_monday)
+    # Add weeks
+    week_monday = first_monday + timedelta(weeks=week - 1)
+    # Adjust if jan1 was already a Monday or later in week 1
+    if jan1.weekday() <= 3:  # Mon-Thu, week 1 starts this week
+        week_monday = jan1 - timedelta(days=jan1.weekday()) + timedelta(weeks=week - 1)
+    else:  # Fri-Sun, week 1 starts next week
+        week_monday = jan1 + timedelta(days=7 - jan1.weekday()) + timedelta(weeks=week - 1)
+
+    return [week_monday + timedelta(days=i) for i in range(7)]
+
+
+def generate_puzzle_set(db: Session, n: int = 7, week_key: str = None) -> list[dict]:
     """
     Generate n valid crossword puzzles using the real generator.
+    Each puzzle gets a scheduled_date for one day of the week.
     """
     import random
     from app.services.crossword_generator import generate_puzzle
 
-    # Load words from database, grouped by length
+    if week_key is None:
+        week_key = get_current_week_key()
+
+    # Get dates for this week
+    week_dates = get_week_dates(week_key)
+
+    # Load words from database, grouped by length (limited for speed)
     words_by_length: dict[int, list[str]] = {}
     for length in range(MIN_WORD_LENGTH, MAX_WORD_LENGTH + 1):
         words = get_words_by_length(db, length)
         if words:
-            words_by_length[length] = words
-            logger.debug(f"Loaded {len(words)} words of length {length}")
+            # Shuffle and limit for speed
+            random.shuffle(words)
+            words_by_length[length] = words[:MAX_WORDS_PER_LENGTH]
+            logger.debug(f"Loaded {len(words_by_length[length])} words of length {length}")
 
     if not words_by_length:
         logger.error("No words in dictionary, cannot generate puzzles")
@@ -248,20 +281,22 @@ def generate_puzzle_set(db: Session, n: int = 25) -> list[dict]:
 
     puzzles = []
     failed_count = 0
-    max_failures = n * 2  # Allow some failures
+    max_failures = n * 3  # Allow some failures
 
-    i = 0
+    day_index = 0
     while len(puzzles) < n and failed_count < max_failures:
-        size = random.choice([5, 6, 7])
+        # Vary size: 5x5 most common, 6x6 and 7x7 less common
+        size = random.choices([5, 5, 5, 6, 6, 7], k=1)[0]
 
-        puzzle_data = generate_puzzle(size, words_by_length, max_attempts=30)
+        puzzle_data = generate_puzzle(size, words_by_length, max_attempts=15)
         if puzzle_data:
-            # Add metadata
-            puzzle_data["title"] = f"Puzzle {i + 1}"
+            # Add metadata and scheduled date
+            puzzle_data["title"] = f"Daily Puzzle"
             puzzle_data["difficulty"] = _estimate_difficulty(puzzle_data)
+            puzzle_data["scheduled_date"] = week_dates[day_index]
             puzzles.append(puzzle_data)
-            logger.info(f"Generated puzzle {len(puzzles)}/{n} (size={size})")
-            i += 1
+            logger.info(f"Generated puzzle {len(puzzles)}/{n} for {week_dates[day_index]} (size={size})")
+            day_index += 1
         else:
             failed_count += 1
             logger.warning(f"Failed to generate puzzle (attempt {failed_count})")

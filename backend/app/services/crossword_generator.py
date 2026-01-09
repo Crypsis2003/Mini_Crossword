@@ -159,15 +159,15 @@ class CrosswordFiller:
         self.solution = [[cell for cell in row] for row in grid.grid]
         self.used_words: set[str] = set()
 
-    def fill(self, max_backtracks: int = 1000) -> bool:
+    def fill(self, max_backtracks: int = 500) -> bool:
         """
         Fill the grid with words using backtracking.
 
         Returns True if successful, False otherwise.
         """
         slots = self.grid.slots[:]
-        # Sort by most constrained first (longest slots, then by intersections)
-        slots.sort(key=lambda s: (-s["length"], -len(self._get_intersections(s))))
+        # Sort by most constrained first (fewest candidates, then longest)
+        slots.sort(key=lambda s: (len(self._get_intersections(s)), -s["length"]))
 
         self.backtrack_count = 0
         return self._backtrack(slots, 0, max_backtracks)
@@ -201,7 +201,7 @@ class CrosswordFiller:
 
         return False
 
-    def _get_candidates(self, slot: dict) -> list[str]:
+    def _get_candidates(self, slot: dict, max_candidates: int = 100) -> list[str]:
         """Get candidate words that fit the slot's constraints."""
         length = slot["length"]
         if length not in self.words_by_length:
@@ -213,6 +213,8 @@ class CrosswordFiller:
         for word in self.words_by_length[length]:
             if self._matches_pattern(word, pattern):
                 candidates.append(word)
+                if len(candidates) >= max_candidates:
+                    break
 
         return candidates
 
@@ -332,7 +334,7 @@ def generate_random_pattern(size: int, black_ratio: float = 0.15, max_attempts: 
     return None
 
 
-def generate_puzzle(size: int, words_by_length: dict[int, list[str]], max_attempts: int = 50) -> Optional[dict]:
+def generate_puzzle(size: int, words_by_length: dict[int, list[str]], max_attempts: int = 20) -> Optional[dict]:
     """
     Generate a complete crossword puzzle.
 
@@ -345,14 +347,14 @@ def generate_puzzle(size: int, words_by_length: dict[int, list[str]], max_attemp
         Puzzle dict with grid, solution, clues, or None if failed
     """
     for attempt in range(max_attempts):
-        # Generate a random valid pattern
-        grid = generate_random_pattern(size, black_ratio=0.12)
+        # Generate a random valid pattern (fewer black squares = easier to fill)
+        grid = generate_random_pattern(size, black_ratio=0.08, max_attempts=30)
         if not grid:
             continue
 
         # Try to fill it with words
         filler = CrosswordFiller(grid, words_by_length)
-        if filler.fill(max_backtracks=2000):
+        if filler.fill(max_backtracks=500):
             solution = filler.get_solution()
 
             # Build puzzle dict
