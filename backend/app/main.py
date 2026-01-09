@@ -97,6 +97,31 @@ def run_migrations():
     logger.info("Database migrations completed")
 
 
+def ensure_puzzles_ready():
+    """Ensure puzzle cache is populated (runs in background thread)."""
+    import threading
+
+    def _generate():
+        from app.database import SessionLocal
+        from app.services.puzzle_cache import ensure_weekly_cache, get_current_week_key
+
+        db = SessionLocal()
+        try:
+            week_key = get_current_week_key()
+            logger.info(f"Background: Ensuring puzzle cache for {week_key}...")
+            ensure_weekly_cache(db)
+            logger.info("Background: Puzzle cache ready")
+        except Exception as e:
+            logger.error(f"Background: Error ensuring puzzle cache: {e}")
+        finally:
+            db.close()
+
+    # Run in background so startup completes quickly
+    thread = threading.Thread(target=_generate, daemon=True)
+    thread.start()
+    logger.info("Started background puzzle generation thread")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan events."""
@@ -104,6 +129,7 @@ async def lifespan(app: FastAPI):
     init_db()
     logger.info("Database initialized")
     run_migrations()
+    ensure_puzzles_ready()
     yield
     logger.info("Shutting down application...")
 
