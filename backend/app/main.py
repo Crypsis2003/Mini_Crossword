@@ -39,27 +39,62 @@ if FRONTEND_DIR.exists():
     logger.info(f"Frontend contents: {list(FRONTEND_DIR.iterdir())}")
 
 
-def seed_database_if_needed():
-    """Seed the database with initial puzzles if empty."""
-    from app.database import SessionLocal
-    from app.models.puzzle import Puzzle
+def run_migrations():
+    """Run any pending database migrations."""
+    from app.database import engine
+    from sqlalchemy import text
 
-    db = SessionLocal()
-    try:
-        puzzle_count = db.query(Puzzle).count()
-        if puzzle_count == 0:
-            logger.info("No puzzles found, seeding database...")
-            import sys
-            sys.path.insert(0, str(BACKEND_DIR))
-            from seed_data import seed_puzzles
-            seed_puzzles(db)
-            logger.info("Database seeded successfully")
-        else:
-            logger.info(f"Database already has {puzzle_count} puzzles")
-    except Exception as e:
-        logger.error(f"Error checking/seeding database: {e}")
-    finally:
-        db.close()
+    migrations = [
+        # Add week_key column to puzzles table
+        """
+        DO $$
+        BEGIN
+            IF NOT EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'puzzles' AND column_name = 'week_key'
+            ) THEN
+                ALTER TABLE puzzles ADD COLUMN week_key VARCHAR(10);
+                CREATE INDEX IF NOT EXISTS ix_puzzles_week_key ON puzzles(week_key);
+            END IF;
+        END $$;
+        """,
+        # Create dictionary_words table if not exists
+        """
+        CREATE TABLE IF NOT EXISTS dictionary_words (
+            id SERIAL PRIMARY KEY,
+            word VARCHAR(50) NOT NULL UNIQUE,
+            length INTEGER NOT NULL,
+            frequency INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE INDEX IF NOT EXISTS ix_dictionary_words_length ON dictionary_words(length);
+        CREATE INDEX IF NOT EXISTS ix_dictionary_words_length_word ON dictionary_words(length, word);
+        """,
+        # Create puzzle_cache_meta table if not exists
+        """
+        CREATE TABLE IF NOT EXISTS puzzle_cache_meta (
+            id SERIAL PRIMARY KEY,
+            week_key VARCHAR(10) NOT NULL UNIQUE,
+            status VARCHAR(20) DEFAULT 'idle',
+            puzzle_count INTEGER DEFAULT 0,
+            started_at TIMESTAMP,
+            completed_at TIMESTAMP,
+            error_message VARCHAR(500)
+        );
+        CREATE INDEX IF NOT EXISTS ix_puzzle_cache_meta_week_key ON puzzle_cache_meta(week_key);
+        """
+    ]
+
+    with engine.connect() as conn:
+        for migration in migrations:
+            try:
+                conn.execute(text(migration))
+                conn.commit()
+            except Exception as e:
+                logger.warning(f"Migration warning (may be OK): {e}")
+                conn.rollback()
+
+    logger.info("Database migrations completed")
 
 
 @asynccontextmanager
@@ -68,7 +103,7 @@ async def lifespan(app: FastAPI):
     logger.info("Starting application...")
     init_db()
     logger.info("Database initialized")
-    seed_database_if_needed()
+    run_migrations()
     yield
     logger.info("Shutting down application...")
 
