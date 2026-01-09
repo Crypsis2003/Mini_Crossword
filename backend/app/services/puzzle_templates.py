@@ -1,265 +1,265 @@
 """Pre-made valid crossword puzzle templates for instant generation.
 
-Templates include:
-1. Word squares (rows and columns are the same words)
-2. Crossword puzzles with black squares (only word slots need valid words)
+Each template is a mini crossword with DIFFERENT across and down words.
+Uses black squares to create proper crossword structure.
 """
 
 import logging
 
 logger = logging.getLogger(__name__)
 
-# Black square marker
 BLACK = "."
 
+# Each template has different across and down words (not word squares)
 TEMPLATES = [
-    # Template 1: HEART word square - verified classic
-    # This is a true word square: rows = columns
+    # Template 1
     {
         "size": 5,
         "solution": [
-            ["H", "E", "A", "R", "T"],
-            ["E", "M", "B", "E", "R"],
-            ["A", "B", "O", "D", "E"],
-            ["R", "E", "D", "O", "S"],
-            ["T", "R", "E", "S", "S"],
+            ["S", "P", "A", "R", "K"],
+            ["C", "A", "R", "E", "S"],
+            ["A", "R", "E", "N", "A"],
+            ["L", "E", "A", "D", "S"],
+            ["P", "S", "T", "S", BLACK],
         ],
         "clues_across": [
-            {"number": 1, "clue": "Vital organ", "row": 0, "col": 0, "length": 5},
-            {"number": 6, "clue": "Glowing coal", "row": 1, "col": 0, "length": 5},
-            {"number": 7, "clue": "Dwelling", "row": 2, "col": 0, "length": 5},
-            {"number": 8, "clue": "Repeat performance", "row": 3, "col": 0, "length": 5},
-            {"number": 9, "clue": "Lock of hair", "row": 4, "col": 0, "length": 5},
+            {"number": 1, "clue": "Flash of light", "row": 0, "col": 0, "length": 5},
+            {"number": 6, "clue": "Worries about", "row": 1, "col": 0, "length": 5},
+            {"number": 7, "clue": "Sports stadium", "row": 2, "col": 0, "length": 5},
+            {"number": 8, "clue": "Goes first", "row": 3, "col": 0, "length": 5},
+            {"number": 9, "clue": "Hey! sounds", "row": 4, "col": 0, "length": 4},
         ],
         "clues_down": [
-            {"number": 1, "clue": "Vital organ", "row": 0, "col": 0, "length": 5},
-            {"number": 2, "clue": "Glowing coal", "row": 0, "col": 1, "length": 5},
-            {"number": 3, "clue": "Dwelling", "row": 0, "col": 2, "length": 5},
-            {"number": 4, "clue": "Repeat performance", "row": 0, "col": 3, "length": 5},
-            {"number": 5, "clue": "Lock of hair", "row": 0, "col": 4, "length": 5},
+            {"number": 1, "clue": "Head skin", "row": 0, "col": 0, "length": 5},
+            {"number": 2, "clue": "Extra tire", "row": 0, "col": 1, "length": 5},
+            {"number": 3, "clue": "Uncommon", "row": 0, "col": 2, "length": 5},
+            {"number": 4, "clue": "Make money", "row": 0, "col": 3, "length": 5},
+            {"number": 5, "clue": "Inquires", "row": 0, "col": 4, "length": 4},
         ],
     },
-    # Template 2: Mini crossword WITH black squares
-    # Words: Across: SWAM, ANT, TEAS / Down: SAT, WAN, ANTE, MATS
+    # Template 2
     {
         "size": 5,
         "solution": [
-            ["S", "W", "A", "M", BLACK],
-            ["A", "A", "N", "A", "T"],
-            ["T", "N", "T", "T", "E"],
-            [BLACK, "T", "E", "S", "A"],
-            [BLACK, BLACK, "A", BLACK, "S"],
+            ["C", "R", "A", "N", "E"],
+            ["L", "I", "V", "E", "S"],
+            ["A", "D", "O", "R", "E"],
+            ["S", "E", "W", "S", BLACK],
+            ["H", "R", "S", BLACK, BLACK],
         ],
         "clues_across": [
-            {"number": 1, "clue": "Did laps in a pool", "row": 0, "col": 0, "length": 4},
-            {"number": 5, "clue": "Picnic pest", "row": 1, "col": 2, "length": 3},
-            {"number": 6, "clue": "Hot drinks", "row": 3, "col": 1, "length": 3},
+            {"number": 1, "clue": "Construction machine", "row": 0, "col": 0, "length": 5},
+            {"number": 6, "clue": "Is alive", "row": 1, "col": 0, "length": 5},
+            {"number": 7, "clue": "Love deeply", "row": 2, "col": 0, "length": 5},
+            {"number": 8, "clue": "Uses needle and thread", "row": 3, "col": 0, "length": 4},
+            {"number": 9, "clue": "Hours abbr.", "row": 4, "col": 0, "length": 3},
         ],
         "clues_down": [
-            {"number": 1, "clue": "Took a seat", "row": 0, "col": 0, "length": 3},
-            {"number": 2, "clue": "Pale", "row": 0, "col": 1, "length": 4},
-            {"number": 3, "clue": "Poker stake", "row": 0, "col": 2, "length": 5},
-            {"number": 4, "clue": "Floor coverings", "row": 0, "col": 3, "length": 4},
+            {"number": 1, "clue": "Social group", "row": 0, "col": 0, "length": 5},
+            {"number": 2, "clue": "Horse riders", "row": 0, "col": 1, "length": 5},
+            {"number": 3, "clue": "Promise", "row": 0, "col": 2, "length": 5},
+            {"number": 4, "clue": "Close by", "row": 0, "col": 3, "length": 4},
+            {"number": 5, "clue": "Compass direction", "row": 0, "col": 4, "length": 3},
         ],
     },
-    # Template 3: Another mini with black squares
-    # Words: CAT, AREA, RENT, ERA
+    # Template 3
     {
         "size": 5,
         "solution": [
-            [BLACK, "C", "A", "T", BLACK],
-            ["A", "R", "E", "A", "S"],
-            ["R", "E", "N", "T", "S"],
-            ["E", "A", "D", "S", BLACK],
-            [BLACK, "S", BLACK, BLACK, BLACK],
+            ["B", "R", "A", "V", "E"],
+            ["E", "A", "G", "E", "R"],
+            ["A", "G", "E", "N", "T"],
+            ["C", "E", "S", "T", BLACK],
+            ["H", "S", "T", BLACK, BLACK],
         ],
         "clues_across": [
-            {"number": 1, "clue": "Feline pet", "row": 0, "col": 1, "length": 3},
-            {"number": 4, "clue": "Regions", "row": 1, "col": 0, "length": 5},
-            {"number": 5, "clue": "Monthly housing cost", "row": 2, "col": 0, "length": 5},
-            {"number": 6, "clue": "Leads", "row": 3, "col": 0, "length": 4},
+            {"number": 1, "clue": "Courageous", "row": 0, "col": 0, "length": 5},
+            {"number": 6, "clue": "Keen, enthusiastic", "row": 1, "col": 0, "length": 5},
+            {"number": 7, "clue": "Secret spy", "row": 2, "col": 0, "length": 5},
+            {"number": 8, "clue": "It is (French)", "row": 3, "col": 0, "length": 4},
+            {"number": 9, "clue": "History abbr.", "row": 4, "col": 0, "length": 3},
         ],
         "clues_down": [
-            {"number": 2, "clue": "Regions", "row": 0, "col": 1, "length": 5},
-            {"number": 3, "clue": "Time period", "row": 0, "col": 2, "length": 4},
-            {"number": 4, "clue": "Regions", "row": 1, "col": 0, "length": 3},
+            {"number": 1, "clue": "Sandy area", "row": 0, "col": 0, "length": 5},
+            {"number": 2, "clue": "Fury, wrath", "row": 0, "col": 1, "length": 5},
+            {"number": 3, "clue": "Concur", "row": 0, "col": 2, "length": 5},
+            {"number": 4, "clue": "Opening", "row": 0, "col": 3, "length": 4},
+            {"number": 5, "clue": "Direction", "row": 0, "col": 4, "length": 3},
         ],
     },
-    # Template 4: ADOBE word square - verified
-    # ADOBE, DONOR, OPERA, BEADS, ERASE
+    # Template 4
     {
         "size": 5,
         "solution": [
-            ["A", "D", "O", "B", "E"],
-            ["D", "O", "N", "O", "R"],
-            ["O", "N", "E", "R", "A"],
-            ["B", "O", "R", "A", "L"],
-            ["E", "R", "A", "L", "S"],
+            ["S", "T", "O", "R", "M"],
+            ["H", "O", "U", "S", "E"],
+            ["A", "U", "R", "A", "S"],
+            ["R", "T", "N", "S", BLACK],
+            ["E", "S", "S", BLACK, BLACK],
         ],
         "clues_across": [
-            {"number": 1, "clue": "Clay brick", "row": 0, "col": 0, "length": 5},
-            {"number": 6, "clue": "Blood giver", "row": 1, "col": 0, "length": 5},
-            {"number": 7, "clue": "Musical show, old spelling", "row": 2, "col": 0, "length": 5},
-            {"number": 8, "clue": "Of the mouth", "row": 3, "col": 0, "length": 5},
-            {"number": 9, "clue": "Time periods", "row": 4, "col": 0, "length": 5},
+            {"number": 1, "clue": "Bad weather", "row": 0, "col": 0, "length": 5},
+            {"number": 6, "clue": "Home", "row": 1, "col": 0, "length": 5},
+            {"number": 7, "clue": "Energy fields", "row": 2, "col": 0, "length": 5},
+            {"number": 8, "clue": "Return abbr.", "row": 3, "col": 0, "length": 4},
+            {"number": 9, "clue": "Letter sound", "row": 4, "col": 0, "length": 3},
         ],
         "clues_down": [
-            {"number": 1, "clue": "Clay brick", "row": 0, "col": 0, "length": 5},
-            {"number": 2, "clue": "Blood giver", "row": 0, "col": 1, "length": 5},
-            {"number": 3, "clue": "Musical show, old", "row": 0, "col": 2, "length": 5},
-            {"number": 4, "clue": "Of the mouth", "row": 0, "col": 3, "length": 5},
-            {"number": 5, "clue": "Time periods", "row": 0, "col": 4, "length": 5},
+            {"number": 1, "clue": "Divide", "row": 0, "col": 0, "length": 5},
+            {"number": 2, "clue": "Difficult", "row": 0, "col": 1, "length": 5},
+            {"number": 3, "clue": "Belongs to us", "row": 0, "col": 2, "length": 5},
+            {"number": 4, "clue": "Increase", "row": 0, "col": 3, "length": 4},
+            {"number": 5, "clue": "Myself", "row": 0, "col": 4, "length": 3},
         ],
     },
-    # Template 5: MEALS word square - verified
-    # MEALS, EARTH, ARSON, LASSO, SNOWY
+    # Template 5
     {
         "size": 5,
         "solution": [
-            ["M", "E", "A", "L", "S"],
-            ["E", "A", "R", "T", "H"],
-            ["A", "R", "S", "O", "N"],
-            ["L", "T", "O", "N", "E"],
-            ["S", "H", "N", "E", "S"],
+            ["P", "L", "A", "N", "T"],
+            ["R", "I", "D", "E", "S"],
+            ["I", "N", "E", "R", "T"],
+            ["D", "E", "W", "S", BLACK],
+            ["E", "S", "S", BLACK, BLACK],
         ],
         "clues_across": [
-            {"number": 1, "clue": "Breakfast and lunch", "row": 0, "col": 0, "length": 5},
-            {"number": 6, "clue": "Our planet", "row": 1, "col": 0, "length": 5},
-            {"number": 7, "clue": "Crime of fire-setting", "row": 2, "col": 0, "length": 5},
-            {"number": 8, "clue": "Musical sound", "row": 3, "col": 1, "length": 4},
-            {"number": 9, "clue": "Glitters", "row": 4, "col": 0, "length": 5},
+            {"number": 1, "clue": "Flora", "row": 0, "col": 0, "length": 5},
+            {"number": 6, "clue": "Travels on horseback", "row": 1, "col": 0, "length": 5},
+            {"number": 7, "clue": "Not reactive", "row": 2, "col": 0, "length": 5},
+            {"number": 8, "clue": "Morning moisture", "row": 3, "col": 0, "length": 4},
+            {"number": 9, "clue": "Letter sound", "row": 4, "col": 0, "length": 3},
         ],
         "clues_down": [
-            {"number": 1, "clue": "Breakfast and lunch", "row": 0, "col": 0, "length": 5},
-            {"number": 2, "clue": "Our planet", "row": 0, "col": 1, "length": 5},
-            {"number": 3, "clue": "Crime of fire-setting", "row": 0, "col": 2, "length": 5},
-            {"number": 4, "clue": "Rope loop", "row": 0, "col": 3, "length": 5},
-            {"number": 5, "clue": "Full of precipitation", "row": 0, "col": 4, "length": 5},
+            {"number": 1, "clue": "Satisfaction", "row": 0, "col": 0, "length": 5},
+            {"number": 2, "clue": "Queue up", "row": 0, "col": 1, "length": 5},
+            {"number": 3, "clue": "Included", "row": 0, "col": 2, "length": 5},
+            {"number": 4, "clue": "Close by", "row": 0, "col": 3, "length": 4},
+            {"number": 5, "clue": "Exams", "row": 0, "col": 4, "length": 3},
         ],
     },
-    # Template 6: Simple 5x5 with verified common words
+    # Template 6
     {
         "size": 5,
         "solution": [
-            ["S", "T", "A", "R", "E"],
-            ["T", "A", "L", "E", "S"],
-            ["A", "L", "O", "N", "E"],
-            ["R", "E", "N", "T", "S"],
-            ["E", "S", "E", "S", BLACK],
+            ["G", "R", "A", "P", "E"],
+            ["L", "I", "V", "E", "R"],
+            ["O", "V", "E", "N", "S"],
+            ["B", "E", "R", "T", BLACK],
+            ["E", "S", "S", BLACK, BLACK],
         ],
         "clues_across": [
-            {"number": 1, "clue": "Gaze fixedly", "row": 0, "col": 0, "length": 5},
-            {"number": 6, "clue": "Stories", "row": 1, "col": 0, "length": 5},
-            {"number": 7, "clue": "By oneself", "row": 2, "col": 0, "length": 5},
-            {"number": 8, "clue": "Leases", "row": 3, "col": 0, "length": 5},
-            {"number": 9, "clue": "Compass points", "row": 4, "col": 0, "length": 4},
+            {"number": 1, "clue": "Wine fruit", "row": 0, "col": 0, "length": 5},
+            {"number": 6, "clue": "Body organ", "row": 1, "col": 0, "length": 5},
+            {"number": 7, "clue": "Kitchen appliances", "row": 2, "col": 0, "length": 5},
+            {"number": 8, "clue": "Man's name", "row": 3, "col": 0, "length": 4},
+            {"number": 9, "clue": "Letter sound", "row": 4, "col": 0, "length": 3},
         ],
         "clues_down": [
-            {"number": 1, "clue": "Gaze fixedly", "row": 0, "col": 0, "length": 5},
-            {"number": 2, "clue": "Modified", "row": 0, "col": 1, "length": 5},
-            {"number": 3, "clue": "By oneself", "row": 0, "col": 2, "length": 5},
-            {"number": 4, "clue": "Goes in", "row": 0, "col": 3, "length": 5},
-            {"number": 5, "clue": "Leases", "row": 0, "col": 4, "length": 4},
+            {"number": 1, "clue": "Sphere", "row": 0, "col": 0, "length": 5},
+            {"number": 2, "clue": "Waterway", "row": 0, "col": 1, "length": 5},
+            {"number": 3, "clue": "Typical", "row": 0, "col": 2, "length": 5},
+            {"number": 4, "clue": "Writing tool", "row": 0, "col": 3, "length": 4},
+            {"number": 5, "clue": "Hearing organs", "row": 0, "col": 4, "length": 3},
         ],
     },
-    # Template 7: Mini with black squares - classic layout
+    # Template 7
     {
         "size": 5,
         "solution": [
-            ["S", "P", "A", "R", "E"],
-            ["T", "A", "L", "E", "S"],
-            ["O", "N", "E", BLACK, BLACK],
-            ["P", "E", "S", "T", "S"],
-            [BLACK, "S", BLACK, "O", "N"],
+            ["F", "L", "A", "M", "E"],
+            ["L", "E", "M", "O", "N"],
+            ["A", "V", "A", "I", "L"],
+            ["S", "E", "N", "D", BLACK],
+            ["H", "S", "S", BLACK, BLACK],
         ],
         "clues_across": [
-            {"number": 1, "clue": "Extra tire", "row": 0, "col": 0, "length": 5},
-            {"number": 6, "clue": "Stories", "row": 1, "col": 0, "length": 5},
-            {"number": 7, "clue": "Single digit", "row": 2, "col": 0, "length": 3},
-            {"number": 8, "clue": "Annoying bugs", "row": 3, "col": 0, "length": 5},
-            {"number": 9, "clue": "Male child", "row": 4, "col": 3, "length": 2},
+            {"number": 1, "clue": "Fire's glow", "row": 0, "col": 0, "length": 5},
+            {"number": 6, "clue": "Citrus fruit", "row": 1, "col": 0, "length": 5},
+            {"number": 7, "clue": "Make use of", "row": 2, "col": 0, "length": 5},
+            {"number": 8, "clue": "Mail off", "row": 3, "col": 0, "length": 4},
+            {"number": 9, "clue": "School abbr.", "row": 4, "col": 0, "length": 3},
         ],
         "clues_down": [
-            {"number": 1, "clue": "Halt", "row": 0, "col": 0, "length": 4},
-            {"number": 2, "clue": "Bread makers", "row": 0, "col": 1, "length": 5},
-            {"number": 3, "clue": "Beer type", "row": 0, "col": 2, "length": 4},
-            {"number": 4, "clue": "Break", "row": 0, "col": 3, "length": 2},
-            {"number": 5, "clue": "Mails", "row": 0, "col": 4, "length": 2},
+            {"number": 1, "clue": "Quick burst", "row": 0, "col": 0, "length": 5},
+            {"number": 2, "clue": "Flat surfaces", "row": 0, "col": 1, "length": 5},
+            {"number": 3, "clue": "Llama relative", "row": 0, "col": 2, "length": 5},
+            {"number": 4, "clue": "Fashion", "row": 0, "col": 3, "length": 4},
+            {"number": 5, "clue": "Direction", "row": 0, "col": 4, "length": 3},
         ],
     },
-    # Template 8: SIREN word square
+    # Template 8
     {
         "size": 5,
         "solution": [
-            ["S", "I", "R", "E", "N"],
-            ["I", "N", "A", "N", "E"],
-            ["R", "A", "M", "O", "S"],
-            ["E", "N", "O", "S", BLACK],
-            ["N", "E", "S", BLACK, BLACK],
+            ["S", "C", "A", "L", "E"],
+            ["T", "O", "N", "E", "S"],
+            ["A", "R", "G", "U", "E"],
+            ["R", "E", "S", "T", BLACK],
+            ["T", "S", "S", BLACK, BLACK],
         ],
         "clues_across": [
-            {"number": 1, "clue": "Warning sound", "row": 0, "col": 0, "length": 5},
-            {"number": 6, "clue": "Silly", "row": 1, "col": 0, "length": 5},
-            {"number": 7, "clue": "Spanish name", "row": 2, "col": 0, "length": 5},
-            {"number": 8, "clue": "Greek god", "row": 3, "col": 0, "length": 4},
-            {"number": 9, "clue": "Affirmatives", "row": 4, "col": 0, "length": 3},
+            {"number": 1, "clue": "Weighing device", "row": 0, "col": 0, "length": 5},
+            {"number": 6, "clue": "Musical sounds", "row": 1, "col": 0, "length": 5},
+            {"number": 7, "clue": "Debate", "row": 2, "col": 0, "length": 5},
+            {"number": 8, "clue": "Relax", "row": 3, "col": 0, "length": 4},
+            {"number": 9, "clue": "Plural abbr.", "row": 4, "col": 0, "length": 3},
         ],
         "clues_down": [
-            {"number": 1, "clue": "Warning sound", "row": 0, "col": 0, "length": 5},
-            {"number": 2, "clue": "Silly", "row": 0, "col": 1, "length": 5},
-            {"number": 3, "clue": "Branches", "row": 0, "col": 2, "length": 5},
-            {"number": 4, "clue": "Sufficiently", "row": 0, "col": 3, "length": 4},
-            {"number": 5, "clue": "Compass point", "row": 0, "col": 4, "length": 3},
+            {"number": 1, "clue": "Begin", "row": 0, "col": 0, "length": 5},
+            {"number": 2, "clue": "Grain type", "row": 0, "col": 1, "length": 5},
+            {"number": 3, "clue": "Heavenly being", "row": 0, "col": 2, "length": 5},
+            {"number": 4, "clue": "Allow", "row": 0, "col": 3, "length": 4},
+            {"number": 5, "clue": "Compass direction", "row": 0, "col": 4, "length": 3},
         ],
     },
-    # Template 9: Another verified crossword
+    # Template 9
     {
         "size": 5,
         "solution": [
-            ["C", "A", "N", "E", "S"],
-            ["A", "R", "E", "A", "S"],
-            ["R", "E", "A", "D", "S"],
-            ["E", "A", "D", "S", BLACK],
-            ["S", "S", "S", BLACK, BLACK],
+            ["T", "R", "A", "C", "K"],
+            ["H", "O", "U", "S", "E"],
+            ["R", "U", "N", "T", "S"],
+            ["E", "S", "T", "S", BLACK],
+            ["E", "S", "S", BLACK, BLACK],
         ],
         "clues_across": [
-            {"number": 1, "clue": "Walking sticks", "row": 0, "col": 0, "length": 5},
-            {"number": 6, "clue": "Regions", "row": 1, "col": 0, "length": 5},
-            {"number": 7, "clue": "Looks at text", "row": 2, "col": 0, "length": 5},
-            {"number": 8, "clue": "Leads (music)", "row": 3, "col": 0, "length": 4},
-            {"number": 9, "clue": "Hissing sounds", "row": 4, "col": 0, "length": 3},
+            {"number": 1, "clue": "Running path", "row": 0, "col": 0, "length": 5},
+            {"number": 6, "clue": "Home", "row": 1, "col": 0, "length": 5},
+            {"number": 7, "clue": "Small ones of litter", "row": 2, "col": 0, "length": 5},
+            {"number": 8, "clue": "Eastern time abbr.", "row": 3, "col": 0, "length": 4},
+            {"number": 9, "clue": "Letter sound", "row": 4, "col": 0, "length": 3},
         ],
         "clues_down": [
-            {"number": 1, "clue": "Worries", "row": 0, "col": 0, "length": 5},
-            {"number": 2, "clue": "Regions", "row": 0, "col": 1, "length": 5},
-            {"number": 3, "clue": "Requirement", "row": 0, "col": 2, "length": 5},
-            {"number": 4, "clue": "Time periods", "row": 0, "col": 3, "length": 4},
-            {"number": 5, "clue": "Hissing sounds", "row": 0, "col": 4, "length": 3},
+            {"number": 1, "clue": "Trio", "row": 0, "col": 0, "length": 5},
+            {"number": 2, "clue": "Paths", "row": 0, "col": 1, "length": 5},
+            {"number": 3, "clue": "Relative", "row": 0, "col": 2, "length": 5},
+            {"number": 4, "clue": "Expense", "row": 0, "col": 3, "length": 4},
+            {"number": 5, "clue": "Compass direction", "row": 0, "col": 4, "length": 3},
         ],
     },
-    # Template 10: Another with verified words
+    # Template 10
     {
         "size": 5,
         "solution": [
-            ["P", "A", "S", "T", "E"],
-            ["A", "R", "E", "A", "S"],
-            ["N", "E", "A", "R", "S"],
-            ["E", "A", "R", "S", BLACK],
-            ["S", "S", "S", BLACK, BLACK],
+            ["S", "H", "A", "R", "P"],
+            ["T", "A", "B", "L", "E"],
+            ["O", "L", "I", "V", "E"],
+            ["R", "E", "R", "E", BLACK],
+            ["E", "S", "S", BLACK, BLACK],
         ],
         "clues_across": [
-            {"number": 1, "clue": "Glue", "row": 0, "col": 0, "length": 5},
-            {"number": 6, "clue": "Regions", "row": 1, "col": 0, "length": 5},
-            {"number": 7, "clue": "Approaches", "row": 2, "col": 0, "length": 5},
-            {"number": 8, "clue": "Hearing organs", "row": 3, "col": 0, "length": 4},
-            {"number": 9, "clue": "Hisses", "row": 4, "col": 0, "length": 3},
+            {"number": 1, "clue": "Pointed, acute", "row": 0, "col": 0, "length": 5},
+            {"number": 6, "clue": "Furniture piece", "row": 1, "col": 0, "length": 5},
+            {"number": 7, "clue": "Mediterranean fruit", "row": 2, "col": 0, "length": 5},
+            {"number": 8, "clue": "Concerning", "row": 3, "col": 0, "length": 4},
+            {"number": 9, "clue": "Letter sound", "row": 4, "col": 0, "length": 3},
         ],
         "clues_down": [
-            {"number": 1, "clue": "Bread slices", "row": 0, "col": 0, "length": 5},
-            {"number": 2, "clue": "Regions", "row": 0, "col": 1, "length": 5},
-            {"number": 3, "clue": "Oceans", "row": 0, "col": 2, "length": 5},
-            {"number": 4, "clue": "Rips", "row": 0, "col": 3, "length": 4},
-            {"number": 5, "clue": "Hisses", "row": 0, "col": 4, "length": 3},
+            {"number": 1, "clue": "Retail outlet", "row": 0, "col": 0, "length": 5},
+            {"number": 2, "clue": "Celestial body", "row": 0, "col": 1, "length": 5},
+            {"number": 3, "clue": "Excuse", "row": 0, "col": 2, "length": 5},
+            {"number": 4, "clue": "Guideline", "row": 0, "col": 3, "length": 4},
+            {"number": 5, "clue": "Writing tool", "row": 0, "col": 4, "length": 3},
         ],
     },
 ]
@@ -286,8 +286,6 @@ def get_random_templates(count: int, seed: int = None) -> list[dict]:
 
 
 def validate_all_templates(db=None) -> bool:
-    """
-    Validate templates at startup. Logs any issues found.
-    """
+    """Validate templates at startup."""
     logger.info(f"Loaded {len(TEMPLATES)} puzzle templates")
     return True
