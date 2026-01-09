@@ -21,6 +21,24 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/puzzles", tags=["puzzles"])
 
 
+@router.get("/all")
+def list_all_puzzles(db: Session = Depends(get_db)):
+    """List all puzzles (admin/debug endpoint)."""
+    from app.models.puzzle import Puzzle
+    puzzles = db.query(Puzzle).order_by(Puzzle.scheduled_date).all()
+    return [
+        {
+            "id": p.id,
+            "title": p.title,
+            "size": p.size,
+            "difficulty": p.difficulty,
+            "scheduled_date": str(p.scheduled_date) if p.scheduled_date else None,
+            "week_key": p.week_key,
+        }
+        for p in puzzles
+    ]
+
+
 @router.get("/today", response_model=PuzzlePlay)
 def get_today_puzzle(
     db: Session = Depends(get_db),

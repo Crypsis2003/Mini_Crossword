@@ -253,11 +253,11 @@ def get_week_dates(week_key: str) -> list[date]:
 
 def generate_puzzle_set(db: Session, n: int = 7, week_key: str = None) -> list[dict]:
     """
-    Generate n valid crossword puzzles using the real generator.
+    Generate n valid crossword puzzles using pre-made templates.
     Each puzzle gets a scheduled_date for one day of the week.
+    Instant generation - no slow algorithmic solving.
     """
-    import random
-    from app.services.crossword_generator import generate_puzzle
+    from app.services.puzzle_templates import get_random_templates
 
     if week_key is None:
         week_key = get_current_week_key()
@@ -265,44 +265,28 @@ def generate_puzzle_set(db: Session, n: int = 7, week_key: str = None) -> list[d
     # Get dates for this week
     week_dates = get_week_dates(week_key)
 
-    # Load words from database, grouped by length (limited for speed)
-    words_by_length: dict[int, list[str]] = {}
-    for length in range(MIN_WORD_LENGTH, MAX_WORD_LENGTH + 1):
-        words = get_words_by_length(db, length)
-        if words:
-            # Shuffle and limit for speed
-            random.shuffle(words)
-            words_by_length[length] = words[:MAX_WORDS_PER_LENGTH]
-            logger.debug(f"Loaded {len(words_by_length[length])} words of length {length}")
-
-    if not words_by_length:
-        logger.error("No words in dictionary, cannot generate puzzles")
-        return []
+    # Use week_key as seed for consistent but different puzzles each week
+    seed = hash(week_key) % 2**32
+    templates = get_random_templates(n, seed=seed)
 
     puzzles = []
-    failed_count = 0
-    max_failures = n * 3  # Allow some failures
+    for i, template in enumerate(templates):
+        # Create empty grid for play (solution hidden)
+        size = template["size"]
+        grid = [[" " for _ in range(size)] for _ in range(size)]
 
-    day_index = 0
-    while len(puzzles) < n and failed_count < max_failures:
-        # Vary size: 5x5 most common, 6x6 and 7x7 less common
-        size = random.choices([5, 5, 5, 6, 6, 7], k=1)[0]
-
-        puzzle_data = generate_puzzle(size, words_by_length, max_attempts=15)
-        if puzzle_data:
-            # Add metadata and scheduled date
-            puzzle_data["title"] = f"Daily Puzzle"
-            puzzle_data["difficulty"] = _estimate_difficulty(puzzle_data)
-            puzzle_data["scheduled_date"] = week_dates[day_index]
-            puzzles.append(puzzle_data)
-            logger.info(f"Generated puzzle {len(puzzles)}/{n} for {week_dates[day_index]} (size={size})")
-            day_index += 1
-        else:
-            failed_count += 1
-            logger.warning(f"Failed to generate puzzle (attempt {failed_count})")
-
-    if len(puzzles) < n:
-        logger.error(f"Only generated {len(puzzles)}/{n} puzzles")
+        puzzle_data = {
+            "title": f"Daily Puzzle",
+            "size": size,
+            "difficulty": "medium",
+            "grid": grid,
+            "solution": template["solution"],
+            "clues_across": template["clues_across"],
+            "clues_down": template["clues_down"],
+            "scheduled_date": week_dates[i] if i < len(week_dates) else None,
+        }
+        puzzles.append(puzzle_data)
+        logger.info(f"Created puzzle {i+1}/{n} for {week_dates[i] if i < len(week_dates) else 'N/A'}")
 
     return puzzles
 
