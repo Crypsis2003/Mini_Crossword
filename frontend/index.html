@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Mini Crossword</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo">Mini Crossword</a>
+            <nav class="nav-links" id="nav-links">
+                <a href="#" data-page="play">Play</a>
+                <a href="#" data-page="leaderboard">Leaderboard</a>
+                <a href="#" data-page="friends" class="hidden" id="nav-friends">Friends</a>
+                <a href="#" data-page="profile" class="hidden" id="nav-profile">Profile</a>
+                <a href="#" data-page="login" id="nav-login">Login</a>
+                <a href="#" data-page="register" id="nav-register">Register</a>
+                <button class="btn btn-secondary hidden" id="nav-logout">Logout</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-container">
+        <!-- Play Page -->
+        <div id="page-play" class="page">
+            <div class="game-layout">
+                <!-- Puzzle Area -->
+                <div class="card">
+                    <div class="crossword-container">
+                        <div class="puzzle-info">
+                            <h1 class="puzzle-title" id="puzzle-title">Loading...</h1>
+                            <p class="puzzle-meta" id="puzzle-meta"></p>
+                        </div>
+
+                        <div class="timer-container">
+                            <div class="timer" id="timer">0:00</div>
+                        </div>
+
+                        <div class="crossword-grid" id="crossword-grid">
+                            <!-- Grid cells will be generated here -->
+                        </div>
+
+                        <div class="game-controls">
+                            <button class="btn btn-secondary" id="btn-check">Check</button>
+                            <button class="btn btn-secondary" id="btn-reveal">Reveal</button>
+                            <button class="btn btn-secondary" id="btn-clear">Clear</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Clues Area -->
+                <div class="card">
+                    <div class="clues-container">
+                        <div class="clues-section">
+                            <h3>Across</h3>
+                            <ul class="clues-list" id="clues-across">
+                                <!-- Clues will be generated here -->
+                            </ul>
+                        </div>
+                        <div class="clues-section">
+                            <h3>Down</h3>
+                            <ul class="clues-list" id="clues-down">
+                                <!-- Clues will be generated here -->
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Leaderboard Page -->
+        <div id="page-leaderboard" class="page hidden">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Today's Leaderboard</h2>
+                </div>
+
+                <div class="tabs">
+                    <button class="tab active" data-tab="global">Global</button>
+                    <button class="tab" data-tab="friends">Friends</button>
+                </div>
+
+                <div class="tab-content active" id="tab-global">
+                    <table class="leaderboard-table">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Player</th>
+                                <th>Time</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboard-global">
+                            <!-- Entries will be generated here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="tab-content" id="tab-friends">
+                    <div id="friends-leaderboard-login" class="hidden">
+                        <p>Please <a href="#" data-page="login">login</a> to see your friends' scores.</p>
+                    </div>
+                    <table class="leaderboard-table">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Player</th>
+                                <th>Time</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboard-friends">
+                            <!-- Entries will be generated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Friends Page -->
+        <div id="page-friends" class="page hidden">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Friends</h2>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Add Friend</label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="text" class="form-input" id="friend-username" placeholder="Enter username">
+                        <button class="btn btn-primary" id="btn-add-friend">Add</button>
+                    </div>
+                </div>
+
+                <div class="tabs">
+                    <button class="tab active" data-tab="my-friends">My Friends</button>
+                    <button class="tab" data-tab="requests">Requests <span id="requests-badge"></span></button>
+                </div>
+
+                <div class="tab-content active" id="tab-my-friends">
+                    <ul class="friend-list" id="friends-list">
+                        <!-- Friends will be listed here -->
+                    </ul>
+                </div>
+
+                <div class="tab-content" id="tab-requests">
+                    <h4 style="margin-bottom: 0.5rem;">Received</h4>
+                    <ul class="friend-list" id="received-requests">
+                        <!-- Received requests -->
+                    </ul>
+
+                    <h4 style="margin: 1rem 0 0.5rem;">Sent</h4>
+                    <ul class="friend-list" id="sent-requests">
+                        <!-- Sent requests -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Page -->
+        <div id="page-profile" class="page hidden">
+            <div class="card">
+                <div class="profile-header">
+                    <div class="profile-avatar" id="profile-avatar">?</div>
+                    <div class="profile-info">
+                        <h1 id="profile-username">Loading...</h1>
+                        <p id="profile-email"></p>
+                        <p id="profile-joined"></p>
+                    </div>
+                </div>
+
+                <h3 style="margin-bottom: 1rem;">Statistics</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-solves">0</div>
+                        <div class="stat-label">Puzzles Solved</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-avg-time">--:--</div>
+                        <div class="stat-label">Average Time</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-best-time">--:--</div>
+                        <div class="stat-label">Best Time</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-friends">0</div>
+                        <div class="stat-label">Friends</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Login Page -->
+        <div id="page-login" class="page hidden">
+            <div class="card" style="max-width: 400px; margin: 0 auto;">
+                <div class="card-header">
+                    <h2 class="card-title">Login</h2>
+                </div>
+
+                <form id="login-form">
+                    <div class="form-group">
+                        <label class="form-label">Username</label>
+                        <input type="text" class="form-input" id="login-username" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-input" id="login-password" required>
+                    </div>
+                    <div id="login-error" class="alert alert-error hidden"></div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Login</button>
+                </form>
+
+                <p style="text-align: center; margin-top: 1rem;">
+                    Don't have an account? <a href="#" data-page="register">Register</a>
+                </p>
+            </div>
+        </div>
+
+        <!-- Register Page -->
+        <div id="page-register" class="page hidden">
+            <div class="card" style="max-width: 400px; margin: 0 auto;">
+                <div class="card-header">
+                    <h2 class="card-title">Register</h2>
+                </div>
+
+                <form id="register-form">
+                    <div class="form-group">
+                        <label class="form-label">Username</label>
+                        <input type="text" class="form-input" id="register-username" required minlength="3">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-input" id="register-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-input" id="register-password" required minlength="8">
+                    </div>
+                    <div id="register-error" class="alert alert-error hidden"></div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Register</button>
+                </form>
+
+                <p style="text-align: center; margin-top: 1rem;">
+                    Already have an account? <a href="#" data-page="login">Login</a>
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Completion Modal -->
+    <div class="modal-overlay" id="completion-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Congratulations!</h3>
+                <button class="modal-close" id="close-completion">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="completion-screen">
+                    <div class="completion-icon">🎉</div>
+                    <div class="completion-title">Puzzle Complete!</div>
+                    <div class="completion-time" id="completion-time">0:00</div>
+                    <div class="completion-rank" id="completion-rank"></div>
+                    <div class="share-text" id="share-text"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="btn-copy-share">Copy Result</button>
+                <button class="btn btn-primary" id="btn-view-leaderboard">View Leaderboard</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/crossword.js"></script>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
