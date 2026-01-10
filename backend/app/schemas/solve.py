@@ -12,6 +12,7 @@ class SolveCreate(BaseModel):
     puzzle_id: int
     time_ms: int = Field(..., gt=0)  # Time must be positive
     grid: list[list[str]]  # Final grid state for verification
+    hints_used: int = Field(default=0, ge=0)  # Number of hints used
 
 
 class SolveResponse(BaseModel):
@@ -24,6 +25,7 @@ class SolveResponse(BaseModel):
     completed_at: datetime
     is_completed: bool
     attempt_count: int
+    hints_used: int = 0
 
     model_config = {"from_attributes": True}
 
@@ -37,6 +39,7 @@ class SolveResult(BaseModel):
     rank: Optional[int] = None
     is_new_record: bool = False
     share_text: Optional[str] = None
+    hints_used: int = 0
 
 
 class LeaderboardEntry(BaseModel):
@@ -49,6 +52,7 @@ class LeaderboardEntry(BaseModel):
     completed_at: datetime
     is_friend: bool = False
     is_current_user: bool = False
+    hints_used: int = 0
 
 
 class LeaderboardResponse(BaseModel):

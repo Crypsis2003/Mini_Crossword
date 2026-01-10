@@ -246,6 +246,7 @@ def submit_solve(
             puzzle_id=puzzle_id,
             time_ms=solve_data.time_ms,
             user_grid=solve_data.grid,
+            hints_used=solve_data.hints_used,
         )
 
         # Generate share text
@@ -265,6 +266,7 @@ def submit_solve(
             rank=rank,
             is_new_record=is_new_record,
             share_text=share_text,
+            hints_used=solve.hints_used or 0,
         )
     except HTTPException:
         raise
@@ -294,6 +296,7 @@ def get_my_solve(
         "time_ms": solve.time_ms,
         "completed_at": solve.completed_at,
         "attempt_count": solve.attempt_count,
+        "hints_used": solve.hints_used or 0,
     }
 
 

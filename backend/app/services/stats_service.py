@@ -36,6 +36,7 @@ class StatsService:
         puzzle_id: int,
         time_ms: int,
         user_grid: list[list[str]],
+        hints_used: int = 0,
     ) -> tuple[Solve, bool, int]:
         """Submit a puzzle solve.
 
@@ -68,6 +69,8 @@ class StatsService:
                 existing_solve.time_ms = time_ms
                 is_new_record = True
             existing_solve.attempt_count += 1
+            # Update hints_used if provided (keep minimum)
+            existing_solve.hints_used = min(existing_solve.hints_used or 0, hints_used)
             solve = existing_solve
         else:
             # Create new solve
@@ -76,6 +79,7 @@ class StatsService:
                 puzzle_id=puzzle_id,
                 time_ms=time_ms,
                 is_completed=True,
+                hints_used=hints_used,
             )
             self.db.add(solve)
             is_new_record = True
@@ -138,6 +142,7 @@ class StatsService:
                 "completed_at": solve.completed_at,
                 "is_friend": user.id in friend_ids,
                 "is_current_user": user.id == current_user_id,
+                "hints_used": solve.hints_used or 0,
             })
 
         return leaderboard
@@ -173,6 +178,7 @@ class StatsService:
                 "completed_at": solve.completed_at,
                 "is_friend": user.id != user_id,
                 "is_current_user": user.id == user_id,
+                "hints_used": solve.hints_used or 0,
             })
 
         return leaderboard

@@ -19,6 +19,7 @@ class Solve(Base):
     completed_at = Column(DateTime, default=datetime.utcnow)
     is_completed = Column(Boolean, default=True)
     attempt_count = Column(Integer, default=1)
+    hints_used = Column(Integer, default=0)  # Number of hints used
 
     # Relationships
     user = relationship("User", back_populates="solves")
@@ -30,4 +31,4 @@ class Solve(Base):
     )
 
     def __repr__(self):
-        return f"<Solve(user_id={self.user_id}, puzzle_id={self.puzzle_id}, time_ms={self.time_ms})>"
+        return f"<Solve(user_id={self.user_id}, puzzle_id={self.puzzle_id}, time_ms={self.time_ms}, hints_used={self.hints_used})>"
