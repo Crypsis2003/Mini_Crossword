@@ -253,11 +253,11 @@ def get_week_dates(week_key: str) -> list[date]:
 
 def generate_puzzle_set(db: Session, n: int = 7, week_key: str = None) -> list[dict]:
     """
-    Generate n valid crossword puzzles using pre-made templates.
+    Generate n valid crossword puzzles with dictionary-validated words.
     Each puzzle gets a scheduled_date for one day of the week.
-    Instant generation - no slow algorithmic solving.
+    All words are verified against the dictionary database.
     """
-    from app.services.puzzle_templates import get_random_templates
+    from app.services.puzzle_templates import generate_weekly_puzzles, BLACK
 
     if week_key is None:
         week_key = get_current_week_key()
@@ -267,26 +267,30 @@ def generate_puzzle_set(db: Session, n: int = 7, week_key: str = None) -> list[d
 
     # Use week_key as seed for consistent but different puzzles each week
     seed = hash(week_key) % 2**32
-    templates = get_random_templates(n, seed=seed)
+
+    # Generate validated puzzles
+    logger.info(f"Generating {n} validated puzzles for {week_key}...")
+    generated = generate_weekly_puzzles(db, count=n, week_seed=seed)
 
     puzzles = []
-    for i, template in enumerate(templates):
-        # Create empty grid for play (solution hidden)
-        size = template["size"]
-        grid = [[" " for _ in range(size)] for _ in range(size)]
+    for i, puzzle in enumerate(generated):
+        # Create empty grid for play (hide letters, show black squares)
+        size = puzzle["size"]
+        solution = puzzle["solution"]
+        grid = [[" " if cell != BLACK else BLACK for cell in row] for row in solution]
 
         puzzle_data = {
             "title": f"Daily Puzzle",
             "size": size,
             "difficulty": "medium",
             "grid": grid,
-            "solution": template["solution"],
-            "clues_across": template["clues_across"],
-            "clues_down": template["clues_down"],
+            "solution": solution,
+            "clues_across": puzzle["clues_across"],
+            "clues_down": puzzle["clues_down"],
             "scheduled_date": week_dates[i] if i < len(week_dates) else None,
         }
         puzzles.append(puzzle_data)
-        logger.info(f"Created puzzle {i+1}/{n} for {week_dates[i] if i < len(week_dates) else 'N/A'}")
+        logger.info(f"Created validated puzzle {i+1}/{n} for {week_dates[i] if i < len(week_dates) else 'N/A'}")
 
     return puzzles
 
