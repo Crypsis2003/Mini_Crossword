@@ -16,9 +16,10 @@ logger = logging.getLogger(__name__)
 # Black square marker
 BLACK = "#"
 
-# Pre-defined grid patterns with black squares - easier to fill patterns
+# Pre-defined grid patterns with black squares at CORNERS ONLY
+# This ensures all word slots are 3+ letters (no 2-letter fragments)
 PATTERNS = [
-    # Pattern 1: Simple - no black squares (10 words: 5 across + 5 down, all 5 letters)
+    # Pattern 1: No black squares (10 words: 5 across + 5 down, all 5 letters)
     [
         [".", ".", ".", ".", "."],
         [".", ".", ".", ".", "."],
@@ -26,7 +27,23 @@ PATTERNS = [
         [".", ".", ".", ".", "."],
         [".", ".", ".", ".", "."],
     ],
-    # Pattern 2: Two corners - creates 4-letter words at edges
+    # Pattern 2: One corner (top-left)
+    [
+        [BLACK, ".", ".", ".", "."],
+        [".", ".", ".", ".", "."],
+        [".", ".", ".", ".", "."],
+        [".", ".", ".", ".", "."],
+        [".", ".", ".", ".", "."],
+    ],
+    # Pattern 3: One corner (bottom-right)
+    [
+        [".", ".", ".", ".", "."],
+        [".", ".", ".", ".", "."],
+        [".", ".", ".", ".", "."],
+        [".", ".", ".", ".", "."],
+        [".", ".", ".", ".", BLACK],
+    ],
+    # Pattern 4: Two diagonal corners (top-left, bottom-right)
     [
         [BLACK, ".", ".", ".", "."],
         [".", ".", ".", ".", "."],
@@ -34,7 +51,7 @@ PATTERNS = [
         [".", ".", ".", ".", "."],
         [".", ".", ".", ".", BLACK],
     ],
-    # Pattern 3: Other two corners
+    # Pattern 5: Two diagonal corners (top-right, bottom-left)
     [
         [".", ".", ".", ".", BLACK],
         [".", ".", ".", ".", "."],
@@ -42,37 +59,37 @@ PATTERNS = [
         [".", ".", ".", ".", "."],
         [BLACK, ".", ".", ".", "."],
     ],
-    # Pattern 4: Four corners - creates 3-letter edge words
+    # Pattern 6: Two adjacent corners (top row)
+    [
+        [BLACK, ".", ".", ".", BLACK],
+        [".", ".", ".", ".", "."],
+        [".", ".", ".", ".", "."],
+        [".", ".", ".", ".", "."],
+        [".", ".", ".", ".", "."],
+    ],
+    # Pattern 7: Two adjacent corners (bottom row)
+    [
+        [".", ".", ".", ".", "."],
+        [".", ".", ".", ".", "."],
+        [".", ".", ".", ".", "."],
+        [".", ".", ".", ".", "."],
+        [BLACK, ".", ".", ".", BLACK],
+    ],
+    # Pattern 8: Three corners
+    [
+        [BLACK, ".", ".", ".", BLACK],
+        [".", ".", ".", ".", "."],
+        [".", ".", ".", ".", "."],
+        [".", ".", ".", ".", "."],
+        [BLACK, ".", ".", ".", "."],
+    ],
+    # Pattern 9: Four corners (creates 3-letter edge words)
     [
         [BLACK, ".", ".", ".", BLACK],
         [".", ".", ".", ".", "."],
         [".", ".", ".", ".", "."],
         [".", ".", ".", ".", "."],
         [BLACK, ".", ".", ".", BLACK],
-    ],
-    # Pattern 5: Center black - creates 2+2 letter splits (may need adjustment)
-    [
-        [".", ".", ".", ".", "."],
-        [".", ".", ".", ".", "."],
-        [".", ".", BLACK, ".", "."],
-        [".", ".", ".", ".", "."],
-        [".", ".", ".", ".", "."],
-    ],
-    # Pattern 6: Left and right center
-    [
-        [".", ".", ".", ".", "."],
-        [".", ".", ".", ".", "."],
-        [BLACK, ".", ".", ".", BLACK],
-        [".", ".", ".", ".", "."],
-        [".", ".", ".", ".", "."],
-    ],
-    # Pattern 7: Top and bottom center
-    [
-        [".", ".", BLACK, ".", "."],
-        [".", ".", ".", ".", "."],
-        [".", ".", ".", ".", "."],
-        [".", ".", ".", ".", "."],
-        [".", ".", BLACK, ".", "."],
     ],
 ]
 
