@@ -15,6 +15,7 @@ const Crossword = {
     isRevealed: false,
     hintsUsed: 0,
     isPracticeMode: false,
+    pendingResult: null,
 
     /**
      * Initialize the crossword with a puzzle.
@@ -31,6 +32,7 @@ const Crossword = {
         this.hintsUsed = 0;
         this.elapsedMs = 0;
         this.isPracticeMode = isPractice;
+        this.pendingResult = null;
         this.stopTimer();
 
         // Initialize grid state
@@ -562,27 +564,67 @@ const Crossword = {
         this.stopTimer();
 
         if (this.isRevealed) {
+            // Revealed - show completion modal directly (no leaderboard)
             document.getElementById('timer').classList.add('invalidated');
             this.showCompletionModal({ time_ms: this.elapsedMs, revealed: true });
         } else if (this.isPracticeMode) {
-            // Practice mode - don't submit to leaderboard
+            // Practice mode - show completion modal directly (no leaderboard)
             document.getElementById('timer').classList.add('completed');
             this.showCompletionModal({ time_ms: this.elapsedMs, practice: true });
         } else {
+            // Normal completion - show name entry modal
             document.getElementById('timer').classList.add('completed');
-
-            if (Auth.isLoggedIn()) {
-                try {
-                    const result = await API.puzzles.solve(this.puzzle.id, this.elapsedMs, this.grid);
-                    this.showCompletionModal(result);
-                } catch (e) {
-                    console.error('Error submitting solve:', e);
-                    this.showCompletionModal({ time_ms: this.elapsedMs });
-                }
-            } else {
-                this.showCompletionModal({ time_ms: this.elapsedMs });
-            }
+            this.showNameEntryModal();
         }
+    },
+
+    /**
+     * Show name entry modal for leaderboard submission.
+     */
+    showNameEntryModal() {
+        const minutes = Math.floor(this.elapsedMs / 60000);
+        const seconds = Math.floor((this.elapsedMs % 60000) / 1000);
+
+        document.getElementById('name-entry-time').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        document.getElementById('leaderboard-name').value = '';
+        document.getElementById('name-entry-modal').classList.add('active');
+
+        // Focus the name input
+        setTimeout(() => {
+            document.getElementById('leaderboard-name').focus();
+        }, 100);
+    },
+
+    /**
+     * Submit to leaderboard with entered name.
+     */
+    async submitToLeaderboard() {
+        const name = document.getElementById('leaderboard-name').value.trim() || 'Anonymous';
+
+        // Hide name entry modal
+        document.getElementById('name-entry-modal').classList.remove('active');
+
+        try {
+            const result = await API.leaderboard.submit(name, this.elapsedMs);
+            this.showCompletionModal({
+                time_ms: this.elapsedMs,
+                rank: result.rank,
+                name: result.name,
+            });
+            App.showToast(`Submitted! You ranked #${result.rank}`, 'success');
+        } catch (e) {
+            console.error('Error submitting to leaderboard:', e);
+            App.showToast(e.message || 'Error submitting to leaderboard', 'error');
+            this.showCompletionModal({ time_ms: this.elapsedMs });
+        }
+    },
+
+    /**
+     * Skip leaderboard submission.
+     */
+    skipLeaderboard() {
+        document.getElementById('name-entry-modal').classList.remove('active');
+        this.showCompletionModal({ time_ms: this.elapsedMs, skipped: true });
     },
 
     /**
@@ -620,16 +662,16 @@ const Crossword = {
 
             if (result.rank) {
                 rankEl.textContent = `You ranked #${result.rank}!`;
-            } else if (!Auth.isLoggedIn()) {
-                rankEl.textContent = 'Login to save your time!';
+            } else if (result.skipped) {
+                rankEl.textContent = 'Not submitted to leaderboard';
             } else {
                 rankEl.textContent = '';
             }
         }
 
-        if (result.share_text) {
-            document.getElementById('share-text').textContent = result.share_text;
-        }
+        // Generate share text
+        const shareText = `Karim's Mini Crossword - ${minutes}:${seconds.toString().padStart(2, '0')}`;
+        document.getElementById('share-text').textContent = shareText;
 
         document.getElementById('completion-modal').classList.add('active');
     },

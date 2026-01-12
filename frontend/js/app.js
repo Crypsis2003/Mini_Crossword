@@ -8,10 +8,6 @@ const App = {
      * Initialize the application.
      */
     async init() {
-        // Load user if logged in
-        await Auth.loadUser();
-        Auth.updateUI();
-
         // Set up navigation
         this.setupNavigation();
 
@@ -38,24 +34,6 @@ const App = {
      * Set up event listeners.
      */
     setupEventListeners() {
-        // Login form
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            await this.handleLogin();
-        });
-
-        // Register form
-        document.getElementById('register-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            await this.handleRegister();
-        });
-
-        // Logout button
-        document.getElementById('nav-logout').addEventListener('click', async () => {
-            await Auth.logout();
-            this.showToast('Logged out successfully', 'success');
-        });
-
         // Start game button
         document.getElementById('btn-start').addEventListener('click', () => Crossword.startGame());
 
@@ -89,12 +67,21 @@ const App = {
             this.loadPracticePuzzle();
         });
 
-        // Add friend button
-        document.getElementById('btn-add-friend').addEventListener('click', () => this.handleAddFriend());
+        // Name entry modal
+        document.getElementById('btn-submit-leaderboard').addEventListener('click', () => {
+            Crossword.submitToLeaderboard();
+        });
 
-        // Tab switching
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', () => this.switchTab(tab));
+        document.getElementById('btn-skip-leaderboard').addEventListener('click', () => {
+            Crossword.skipLeaderboard();
+        });
+
+        // Allow Enter key to submit name
+        document.getElementById('leaderboard-name').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                Crossword.submitToLeaderboard();
+            }
         });
     },
 
@@ -102,12 +89,6 @@ const App = {
      * Navigate to a page.
      */
     async navigate(page) {
-        // Check auth for protected pages
-        if (['friends', 'profile'].includes(page) && !Auth.isLoggedIn()) {
-            this.navigate('login');
-            return;
-        }
-
         // Hide all pages
         document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
 
@@ -127,12 +108,6 @@ const App = {
             case 'leaderboard':
                 await this.loadLeaderboard();
                 break;
-            case 'friends':
-                await this.loadFriends();
-                break;
-            case 'profile':
-                await this.loadProfile();
-                break;
         }
     },
 
@@ -148,14 +123,6 @@ const App = {
                 `${puzzle.size}x${puzzle.size} • ${puzzle.difficulty}`;
 
             Crossword.init(puzzle, false);
-
-            // Check if user has already solved
-            if (Auth.isLoggedIn()) {
-                const solve = await API.puzzles.getMySolve(puzzle.id);
-                if (solve.solved) {
-                    this.showToast(`You've already solved this! Time: ${this.formatTime(solve.time_ms)}`, 'info');
-                }
-            }
         } catch (e) {
             console.error('Error loading puzzle:', e);
             document.getElementById('puzzle-title').textContent = 'No puzzle available';
@@ -191,47 +158,36 @@ const App = {
         try {
             const data = await API.leaderboard.getToday();
 
-            // Render global leaderboard
-            const globalTbody = document.getElementById('leaderboard-global');
-            globalTbody.innerHTML = '';
+            // Show puzzle date
+            const dateEl = document.getElementById('leaderboard-date');
+            if (dateEl && data.puzzle_date) {
+                const date = new Date(data.puzzle_date + 'T00:00:00');
+                dateEl.textContent = date.toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+            }
 
-            data.entries.forEach(entry => {
-                const tr = document.createElement('tr');
-                if (entry.is_current_user) tr.classList.add('current-user');
-                if (entry.is_friend) tr.classList.add('friend');
+            // Render leaderboard
+            const tbody = document.getElementById('leaderboard-global');
+            const emptyEl = document.getElementById('leaderboard-empty');
+            tbody.innerHTML = '';
 
-                tr.innerHTML = `
-                    <td><span class="rank-badge rank-${entry.rank <= 3 ? entry.rank : ''}">${entry.rank}</span></td>
-                    <td>${entry.username}${entry.is_current_user ? ' (you)' : ''}</td>
-                    <td>${this.formatTime(entry.time_ms)}</td>
-                `;
-                globalTbody.appendChild(tr);
-            });
-
-            // Render friends leaderboard
-            const friendsTbody = document.getElementById('leaderboard-friends');
-            friendsTbody.innerHTML = '';
-
-            if (Auth.isLoggedIn()) {
-                document.getElementById('friends-leaderboard-login').classList.add('hidden');
-
-                data.friends_entries.forEach(entry => {
+            if (data.entries && data.entries.length > 0) {
+                emptyEl.classList.add('hidden');
+                data.entries.forEach(entry => {
                     const tr = document.createElement('tr');
-                    if (entry.is_current_user) tr.classList.add('current-user');
-
                     tr.innerHTML = `
                         <td><span class="rank-badge rank-${entry.rank <= 3 ? entry.rank : ''}">${entry.rank}</span></td>
-                        <td>${entry.username}${entry.is_current_user ? ' (you)' : ''}</td>
+                        <td>${this.escapeHtml(entry.name)}</td>
                         <td>${this.formatTime(entry.time_ms)}</td>
                     `;
-                    friendsTbody.appendChild(tr);
+                    tbody.appendChild(tr);
                 });
-
-                if (data.friends_entries.length === 0) {
-                    friendsTbody.innerHTML = '<tr><td colspan="3">No friends have solved today\'s puzzle yet.</td></tr>';
-                }
             } else {
-                document.getElementById('friends-leaderboard-login').classList.remove('hidden');
+                emptyEl.classList.remove('hidden');
             }
         } catch (e) {
             console.error('Error loading leaderboard:', e);
@@ -240,241 +196,12 @@ const App = {
     },
 
     /**
-     * Load friends list.
+     * Escape HTML to prevent XSS.
      */
-    async loadFriends() {
-        try {
-            const data = await API.friends.getList();
-
-            // Render friends list
-            const friendsList = document.getElementById('friends-list');
-            friendsList.innerHTML = '';
-
-            if (data.friends.length === 0) {
-                friendsList.innerHTML = '<li class="friend-item">No friends yet. Add some!</li>';
-            } else {
-                data.friends.forEach(friend => {
-                    const li = document.createElement('li');
-                    li.className = 'friend-item';
-                    li.innerHTML = `
-                        <div class="friend-info">
-                            <div class="friend-avatar">${friend.username[0].toUpperCase()}</div>
-                            <div>
-                                <div class="friend-name">${friend.username}</div>
-                                <div class="friend-stats">
-                                    ${friend.total_solves} puzzles solved
-                                    ${friend.average_time_ms ? ` • Avg: ${this.formatTime(friend.average_time_ms)}` : ''}
-                                </div>
-                            </div>
-                        </div>
-                        <button class="btn btn-secondary btn-sm" onclick="App.removeFriend(${friend.id})">Remove</button>
-                    `;
-                    friendsList.appendChild(li);
-                });
-            }
-
-            // Render received requests
-            const receivedList = document.getElementById('received-requests');
-            receivedList.innerHTML = '';
-
-            if (data.pending_received.length === 0) {
-                receivedList.innerHTML = '<li class="friend-item">No pending requests</li>';
-            } else {
-                data.pending_received.forEach(req => {
-                    const li = document.createElement('li');
-                    li.className = 'friend-item';
-                    li.innerHTML = `
-                        <div class="friend-info">
-                            <div class="friend-avatar">${req.sender_username[0].toUpperCase()}</div>
-                            <div class="friend-name">${req.sender_username}</div>
-                        </div>
-                        <div>
-                            <button class="btn btn-success btn-sm" onclick="App.acceptRequest(${req.id})">Accept</button>
-                            <button class="btn btn-secondary btn-sm" onclick="App.rejectRequest(${req.id})">Reject</button>
-                        </div>
-                    `;
-                    receivedList.appendChild(li);
-                });
-            }
-
-            // Render sent requests
-            const sentList = document.getElementById('sent-requests');
-            sentList.innerHTML = '';
-
-            if (data.pending_sent.length === 0) {
-                sentList.innerHTML = '<li class="friend-item">No pending sent requests</li>';
-            } else {
-                data.pending_sent.forEach(req => {
-                    const li = document.createElement('li');
-                    li.className = 'friend-item';
-                    li.innerHTML = `
-                        <div class="friend-info">
-                            <div class="friend-avatar">${req.receiver_username[0].toUpperCase()}</div>
-                            <div class="friend-name">${req.receiver_username}</div>
-                        </div>
-                        <span style="color: var(--text-secondary);">Pending</span>
-                    `;
-                    sentList.appendChild(li);
-                });
-            }
-
-            // Update badge
-            const badge = document.getElementById('requests-badge');
-            if (data.pending_received.length > 0) {
-                badge.textContent = `(${data.pending_received.length})`;
-            } else {
-                badge.textContent = '';
-            }
-        } catch (e) {
-            console.error('Error loading friends:', e);
-            this.showToast('Error loading friends', 'error');
-        }
-    },
-
-    /**
-     * Load user profile.
-     */
-    async loadProfile() {
-        try {
-            const profile = await Auth.getProfile();
-
-            document.getElementById('profile-avatar').textContent = profile.username[0].toUpperCase();
-            document.getElementById('profile-username').textContent = profile.username;
-            document.getElementById('profile-email').textContent = profile.email;
-            document.getElementById('profile-joined').textContent =
-                `Joined ${new Date(profile.created_at).toLocaleDateString()}`;
-
-            document.getElementById('stat-solves').textContent = profile.total_solves;
-            document.getElementById('stat-avg-time').textContent =
-                profile.average_time_ms ? this.formatTime(profile.average_time_ms) : '--:--';
-            document.getElementById('stat-best-time').textContent =
-                profile.best_time_ms ? this.formatTime(profile.best_time_ms) : '--:--';
-            document.getElementById('stat-friends').textContent = profile.friends_count;
-        } catch (e) {
-            console.error('Error loading profile:', e);
-            this.showToast('Error loading profile', 'error');
-        }
-    },
-
-    /**
-     * Handle login form submission.
-     */
-    async handleLogin() {
-        const username = document.getElementById('login-username').value;
-        const password = document.getElementById('login-password').value;
-        const errorEl = document.getElementById('login-error');
-
-        errorEl.classList.add('hidden');
-
-        try {
-            await Auth.login(username, password);
-            this.showToast('Logged in successfully!', 'success');
-            this.navigate('play');
-        } catch (e) {
-            errorEl.textContent = e.message;
-            errorEl.classList.remove('hidden');
-        }
-    },
-
-    /**
-     * Handle register form submission.
-     */
-    async handleRegister() {
-        const username = document.getElementById('register-username').value;
-        const email = document.getElementById('register-email').value;
-        const password = document.getElementById('register-password').value;
-        const errorEl = document.getElementById('register-error');
-
-        errorEl.classList.add('hidden');
-
-        try {
-            await Auth.register(username, email, password);
-            this.showToast('Account created successfully!', 'success');
-            this.navigate('play');
-        } catch (e) {
-            errorEl.textContent = e.message;
-            errorEl.classList.remove('hidden');
-        }
-    },
-
-    /**
-     * Handle add friend button click.
-     */
-    async handleAddFriend() {
-        const username = document.getElementById('friend-username').value.trim();
-
-        if (!username) {
-            this.showToast('Please enter a username', 'error');
-            return;
-        }
-
-        try {
-            await API.friends.sendRequest(username);
-            this.showToast('Friend request sent!', 'success');
-            document.getElementById('friend-username').value = '';
-            await this.loadFriends();
-        } catch (e) {
-            this.showToast(e.message, 'error');
-        }
-    },
-
-    /**
-     * Accept a friend request.
-     */
-    async acceptRequest(requestId) {
-        try {
-            await API.friends.acceptRequest(requestId);
-            this.showToast('Friend request accepted!', 'success');
-            await this.loadFriends();
-        } catch (e) {
-            this.showToast(e.message, 'error');
-        }
-    },
-
-    /**
-     * Reject a friend request.
-     */
-    async rejectRequest(requestId) {
-        try {
-            await API.friends.rejectRequest(requestId);
-            this.showToast('Friend request rejected', 'success');
-            await this.loadFriends();
-        } catch (e) {
-            this.showToast(e.message, 'error');
-        }
-    },
-
-    /**
-     * Remove a friend.
-     */
-    async removeFriend(friendId) {
-        if (!confirm('Are you sure you want to remove this friend?')) {
-            return;
-        }
-
-        try {
-            await API.friends.remove(friendId);
-            this.showToast('Friend removed', 'success');
-            await this.loadFriends();
-        } catch (e) {
-            this.showToast(e.message, 'error');
-        }
-    },
-
-    /**
-     * Switch tab.
-     */
-    switchTab(tab) {
-        const tabId = tab.dataset.tab;
-        const container = tab.closest('.card');
-
-        // Update tab buttons
-        container.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-
-        // Update tab content
-        container.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        container.querySelector(`#tab-${tabId}`).classList.add('active');
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     },
 
     /**

@@ -82,6 +82,19 @@ def run_migrations():
             error_message VARCHAR(500)
         );
         CREATE INDEX IF NOT EXISTS ix_puzzle_cache_meta_week_key ON puzzle_cache_meta(week_key);
+        """,
+        # Create daily_leaderboard_entries table for public leaderboard
+        """
+        CREATE TABLE IF NOT EXISTS daily_leaderboard_entries (
+            id SERIAL PRIMARY KEY,
+            puzzle_date DATE NOT NULL,
+            name VARCHAR(30) NOT NULL,
+            time_ms INTEGER NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            ip_hash VARCHAR(64)
+        );
+        CREATE INDEX IF NOT EXISTS ix_leaderboard_date ON daily_leaderboard_entries(puzzle_date);
+        CREATE INDEX IF NOT EXISTS ix_leaderboard_date_time ON daily_leaderboard_entries(puzzle_date, time_ms);
         """
     ]
 

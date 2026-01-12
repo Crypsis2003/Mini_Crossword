@@ -14,11 +14,6 @@
             <nav class="nav-links" id="nav-links">
                 <a href="#" data-page="play">Play</a>
                 <a href="#" data-page="leaderboard">Leaderboard</a>
-                <a href="#" data-page="friends" class="hidden" id="nav-friends">Friends</a>
-                <a href="#" data-page="profile" class="hidden" id="nav-profile">Profile</a>
-                <a href="#" data-page="login" id="nav-login">Login</a>
-                <a href="#" data-page="register" id="nav-register">Register</a>
-                <button class="btn btn-secondary hidden" id="nav-logout">Logout</button>
 
                 <!-- Theme Picker -->
                 <div class="theme-picker">
@@ -96,178 +91,52 @@
             <div class="card">
                 <div class="card-header">
                     <h2 class="card-title">Today's Leaderboard</h2>
+                    <p class="card-subtitle" id="leaderboard-date"></p>
                 </div>
 
-                <div class="tabs">
-                    <button class="tab active" data-tab="global">Global</button>
-                    <button class="tab" data-tab="friends">Friends</button>
+                <table class="leaderboard-table">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Player</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard-global">
+                        <!-- Entries will be generated here -->
+                    </tbody>
+                </table>
+
+                <div id="leaderboard-empty" class="hidden" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                    No entries yet. Be the first to complete today's puzzle!
                 </div>
-
-                <div class="tab-content active" id="tab-global">
-                    <table class="leaderboard-table">
-                        <thead>
-                            <tr>
-                                <th>Rank</th>
-                                <th>Player</th>
-                                <th>Time</th>
-                            </tr>
-                        </thead>
-                        <tbody id="leaderboard-global">
-                            <!-- Entries will be generated here -->
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="tab-content" id="tab-friends">
-                    <div id="friends-leaderboard-login" class="hidden">
-                        <p>Please <a href="#" data-page="login">login</a> to see your friends' scores.</p>
-                    </div>
-                    <table class="leaderboard-table">
-                        <thead>
-                            <tr>
-                                <th>Rank</th>
-                                <th>Player</th>
-                                <th>Time</th>
-                            </tr>
-                        </thead>
-                        <tbody id="leaderboard-friends">
-                            <!-- Entries will be generated here -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- Friends Page -->
-        <div id="page-friends" class="page hidden">
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">Friends</h2>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Add Friend</label>
-                    <div style="display: flex; gap: 0.5rem;">
-                        <input type="text" class="form-input" id="friend-username" placeholder="Enter username">
-                        <button class="btn btn-primary" id="btn-add-friend">Add</button>
-                    </div>
-                </div>
-
-                <div class="tabs">
-                    <button class="tab active" data-tab="my-friends">My Friends</button>
-                    <button class="tab" data-tab="requests">Requests <span id="requests-badge"></span></button>
-                </div>
-
-                <div class="tab-content active" id="tab-my-friends">
-                    <ul class="friend-list" id="friends-list">
-                        <!-- Friends will be listed here -->
-                    </ul>
-                </div>
-
-                <div class="tab-content" id="tab-requests">
-                    <h4 style="margin-bottom: 0.5rem;">Received</h4>
-                    <ul class="friend-list" id="received-requests">
-                        <!-- Received requests -->
-                    </ul>
-
-                    <h4 style="margin: 1rem 0 0.5rem;">Sent</h4>
-                    <ul class="friend-list" id="sent-requests">
-                        <!-- Sent requests -->
-                    </ul>
-                </div>
-            </div>
-        </div>
-
-        <!-- Profile Page -->
-        <div id="page-profile" class="page hidden">
-            <div class="card">
-                <div class="profile-header">
-                    <div class="profile-avatar" id="profile-avatar">?</div>
-                    <div class="profile-info">
-                        <h1 id="profile-username">Loading...</h1>
-                        <p id="profile-email"></p>
-                        <p id="profile-joined"></p>
-                    </div>
-                </div>
-
-                <h3 style="margin-bottom: 1rem;">Statistics</h3>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-value" id="stat-solves">0</div>
-                        <div class="stat-label">Puzzles Solved</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="stat-avg-time">--:--</div>
-                        <div class="stat-label">Average Time</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="stat-best-time">--:--</div>
-                        <div class="stat-label">Best Time</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="stat-friends">0</div>
-                        <div class="stat-label">Friends</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Login Page -->
-        <div id="page-login" class="page hidden">
-            <div class="card" style="max-width: 400px; margin: 0 auto;">
-                <div class="card-header">
-                    <h2 class="card-title">Login</h2>
-                </div>
-
-                <form id="login-form">
-                    <div class="form-group">
-                        <label class="form-label">Username</label>
-                        <input type="text" class="form-input" id="login-username" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Password</label>
-                        <input type="password" class="form-input" id="login-password" required>
-                    </div>
-                    <div id="login-error" class="alert alert-error hidden"></div>
-                    <button type="submit" class="btn btn-primary" style="width: 100%;">Login</button>
-                </form>
-
-                <p style="text-align: center; margin-top: 1rem;">
-                    Don't have an account? <a href="#" data-page="register">Register</a>
-                </p>
-            </div>
-        </div>
-
-        <!-- Register Page -->
-        <div id="page-register" class="page hidden">
-            <div class="card" style="max-width: 400px; margin: 0 auto;">
-                <div class="card-header">
-                    <h2 class="card-title">Register</h2>
-                </div>
-
-                <form id="register-form">
-                    <div class="form-group">
-                        <label class="form-label">Username</label>
-                        <input type="text" class="form-input" id="register-username" required minlength="3">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Email</label>
-                        <input type="email" class="form-input" id="register-email" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Password</label>
-                        <input type="password" class="form-input" id="register-password" required minlength="8">
-                    </div>
-                    <div id="register-error" class="alert alert-error hidden"></div>
-                    <button type="submit" class="btn btn-primary" style="width: 100%;">Register</button>
-                </form>
-
-                <p style="text-align: center; margin-top: 1rem;">
-                    Already have an account? <a href="#" data-page="login">Login</a>
-                </p>
             </div>
         </div>
     </main>
+
+    <!-- Name Entry Modal (shown before completion modal) -->
+    <div class="modal-overlay" id="name-entry-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Puzzle Complete!</h3>
+            </div>
+            <div class="modal-body">
+                <div class="completion-screen">
+                    <div class="completion-icon">🎉</div>
+                    <div class="completion-title">Great job!</div>
+                    <div class="completion-time" id="name-entry-time">0:00</div>
+                    <div class="form-group" style="margin-top: 1.5rem;">
+                        <label class="form-label">Enter your name for the leaderboard:</label>
+                        <input type="text" class="form-input" id="leaderboard-name" placeholder="Anonymous" maxlength="30" style="text-align: center; font-size: 1.1rem;">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="btn-skip-leaderboard">Skip</button>
+                <button class="btn btn-primary" id="btn-submit-leaderboard">Submit to Leaderboard</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Completion Modal -->
     <div class="modal-overlay" id="completion-modal">
@@ -298,7 +167,6 @@
 
     <!-- Scripts -->
     <script src="/static/js/api.js"></script>
-    <script src="/static/js/auth.js"></script>
     <script src="/static/js/crossword.js"></script>
     <script src="/static/js/app.js"></script>
 </body>
