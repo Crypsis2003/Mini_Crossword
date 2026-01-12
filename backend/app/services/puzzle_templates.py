@@ -1992,6 +1992,162 @@ def load_dictionary_words(db: Session) -> dict[int, set[str]]:
     return words_by_length
 
 
+def validate_pattern(pattern: list[list[str]]) -> tuple[bool, str]:
+    """
+    Validate a crossword pattern.
+
+    Returns (is_valid, error_message).
+    Rejects patterns that have:
+    - Any horizontal/vertical run of length 1 or 2
+    - Disconnected white regions
+    - Isolated cells not part of any word
+    """
+    size = len(pattern)
+    MIN_WORD_LENGTH = 3
+
+    # Check all horizontal runs
+    for r in range(size):
+        c = 0
+        while c < size:
+            if pattern[r][c] == BLACK:
+                c += 1
+                continue
+            # Start of a horizontal run
+            run_length = 0
+            start_c = c
+            while c < size and pattern[r][c] != BLACK:
+                run_length += 1
+                c += 1
+            # Single letters are invalid (not part of a word)
+            if run_length == 1:
+                return False, f"Single isolated cell at row {r}, col {start_c}"
+            if run_length == 2:
+                return False, f"2-letter horizontal run at row {r}, col {start_c}"
+
+    # Check all vertical runs
+    for c in range(size):
+        r = 0
+        while r < size:
+            if pattern[r][c] == BLACK:
+                r += 1
+                continue
+            # Start of a vertical run
+            run_length = 0
+            start_r = r
+            while r < size and pattern[r][c] != BLACK:
+                run_length += 1
+                r += 1
+            if run_length == 1:
+                return False, f"Single isolated cell at row {start_r}, col {c}"
+            if run_length == 2:
+                return False, f"2-letter vertical run at row {start_r}, col {c}"
+
+    # Check connectivity (all white cells should be connected)
+    white_cells = set()
+    for r in range(size):
+        for c in range(size):
+            if pattern[r][c] != BLACK:
+                white_cells.add((r, c))
+
+    if not white_cells:
+        return False, "No white cells in pattern"
+
+    # BFS to check connectivity
+    start = next(iter(white_cells))
+    visited = set()
+    queue = [start]
+    while queue:
+        r, c = queue.pop(0)
+        if (r, c) in visited:
+            continue
+        visited.add((r, c))
+        # Check all 4 neighbors
+        for dr, dc in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+            nr, nc = r + dr, c + dc
+            if (nr, nc) in white_cells and (nr, nc) not in visited:
+                queue.append((nr, nc))
+
+    if visited != white_cells:
+        return False, "Disconnected white regions in pattern"
+
+    return True, "Valid"
+
+
+def extract_all_runs(grid: list[list[str]]) -> list[tuple[str, str, int, int, int]]:
+    """
+    Extract ALL contiguous letter runs from a filled grid.
+
+    Returns list of (word, direction, row, col, length) tuples.
+    Used for post-fill validation.
+    """
+    size = len(grid)
+    runs = []
+
+    # Extract horizontal runs
+    for r in range(size):
+        c = 0
+        while c < size:
+            if grid[r][c] == BLACK:
+                c += 1
+                continue
+            # Start of a run
+            start_c = c
+            letters = []
+            while c < size and grid[r][c] != BLACK:
+                letters.append(grid[r][c])
+                c += 1
+            if len(letters) >= 2:  # Include 2+ for validation (should catch errors)
+                runs.append(("".join(letters), "across", r, start_c, len(letters)))
+
+    # Extract vertical runs
+    for c in range(size):
+        r = 0
+        while r < size:
+            if grid[r][c] == BLACK:
+                r += 1
+                continue
+            # Start of a run
+            start_r = r
+            letters = []
+            while r < size and grid[r][c] != BLACK:
+                letters.append(grid[r][c])
+                r += 1
+            if len(letters) >= 2:
+                runs.append(("".join(letters), "down", start_r, c, len(letters)))
+
+    return runs
+
+
+def validate_filled_grid(
+    grid: list[list[str]],
+    words_by_length: dict[int, set[str]]
+) -> tuple[bool, list[str]]:
+    """
+    Validate that every horizontal and vertical run in the grid is a valid dictionary word.
+
+    Returns (is_valid, list_of_errors).
+    """
+    errors = []
+    runs = extract_all_runs(grid)
+
+    for word, direction, row, col, length in runs:
+        # Check for unfilled cells
+        if "." in word or " " in word:
+            errors.append(f"Unfilled cells in {direction} word at ({row}, {col}): '{word}'")
+            continue
+
+        # Must be at least 3 letters
+        if length < 3:
+            errors.append(f"Word too short ({length} letters) at ({row}, {col}): '{word}'")
+            continue
+
+        # Must be in dictionary
+        if length not in words_by_length or word not in words_by_length[length]:
+            errors.append(f"Invalid word '{word}' ({direction} at row {row}, col {col})")
+
+    return len(errors) == 0, errors
+
+
 def extract_word_slots(pattern: list[list[str]]) -> list[dict]:
     """Extract word slots from a pattern grid."""
     size = len(pattern)
@@ -2184,6 +2340,10 @@ def generate_validated_puzzle(
     Generate a single validated crossword puzzle.
 
     All words are verified against the dictionary database.
+    Uses:
+    1. Pattern validation (rejects invalid patterns before fill)
+    2. CSP backtracking with MRV heuristic
+    3. Comprehensive post-fill validation of ALL runs
     """
     if seed is not None:
         random.seed(seed)
@@ -2201,6 +2361,12 @@ def generate_validated_puzzle(
     else:
         pattern = random.choice(PATTERNS)
 
+    # Step 1: Validate pattern BEFORE attempting fill
+    is_valid, error_msg = validate_pattern(pattern)
+    if not is_valid:
+        logger.error(f"Invalid pattern: {error_msg}")
+        return None
+
     # Extract word slots
     slots = extract_word_slots(pattern)
 
@@ -2210,19 +2376,20 @@ def generate_validated_puzzle(
 
     logger.info(f"Pattern has {len(slots)} word slots")
 
-    # Try to fill the puzzle
+    # Step 2: Try to fill the puzzle using backtracking
     solution = fill_puzzle_with_backtracking(pattern, slots, words_by_length)
 
     if solution is None:
         logger.warning("Failed to fill puzzle with valid words")
         return None
 
-    # Verify all words are in dictionary
-    for slot in slots:
-        word = "".join(solution[r][c] for r, c in slot["cells"])
-        if word not in words_by_length.get(len(word), set()):
-            logger.error(f"Word '{word}' not in dictionary!")
-            return None
+    # Step 3: Comprehensive post-fill validation
+    # Verify EVERY horizontal and vertical run is a valid word
+    is_valid, errors = validate_filled_grid(solution, words_by_length)
+    if not is_valid:
+        for error in errors:
+            logger.error(f"Validation error: {error}")
+        return None
 
     # Build clues
     clues_across = []
