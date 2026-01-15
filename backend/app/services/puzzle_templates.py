@@ -1671,11 +1671,21 @@ CLUE_TEMPLATES = {
 
 
 def get_clue_for_word(word: str) -> str:
-    """Get a clue for a word, using templates or generating a simple one."""
+    """Get a clue for a word, using the clue database or falling back to templates."""
+    from app.services.clue_database import get_clue_for_word as get_real_clue
+
     word_upper = word.upper()
+
+    # First, try the real clue database (public domain clues)
+    real_clue = get_real_clue(word_upper)
+    if real_clue:
+        return real_clue
+
+    # Fall back to our template clues
     if word_upper in CLUE_TEMPLATES:
         return CLUE_TEMPLATES[word_upper]
-    # Default clue
+
+    # Last resort: generic clue
     return f"{len(word)}-letter word"
 
 
