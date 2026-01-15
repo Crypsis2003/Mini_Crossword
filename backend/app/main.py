@@ -127,7 +127,7 @@ def ensure_puzzles_ready():
             # One-time migration: Clear old puzzles that don't have real clues
             # Check if any puzzle has generic clues (indicates old data)
             old_puzzle = db.query(Puzzle).filter(
-                Puzzle.clues_json.like('%Garden bloom%')  # Old generic clue
+                Puzzle.clues_across.like('%Garden bloom%')  # Old generic clue
             ).first()
 
             if old_puzzle:
