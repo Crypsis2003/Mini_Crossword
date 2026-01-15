@@ -117,10 +117,26 @@ def ensure_puzzles_ready():
     def _generate():
         from app.database import SessionLocal
         from app.services.puzzle_cache import ensure_weekly_cache, get_current_week_key
+        from app.models.puzzle import Puzzle
+        from app.models.cache_meta import PuzzleCacheMeta
 
         db = SessionLocal()
         try:
             week_key = get_current_week_key()
+
+            # One-time migration: Clear old puzzles that don't have real clues
+            # Check if any puzzle has generic clues (indicates old data)
+            old_puzzle = db.query(Puzzle).filter(
+                Puzzle.clues_json.like('%Garden bloom%')  # Old generic clue
+            ).first()
+
+            if old_puzzle:
+                logger.info("Detected old puzzles with generic clues - clearing for regeneration...")
+                db.query(Puzzle).delete()
+                db.query(PuzzleCacheMeta).delete()
+                db.commit()
+                logger.info("Cleared old puzzle data")
+
             logger.info(f"Background: Ensuring puzzle cache for {week_key}...")
             ensure_weekly_cache(db)
             logger.info("Background: Puzzle cache ready")
