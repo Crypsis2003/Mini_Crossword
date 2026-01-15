@@ -111,42 +111,55 @@ def run_migrations():
 
 
 def ensure_puzzles_ready():
-    """Ensure puzzle cache is populated (runs synchronously for reliable startup)."""
-    from app.database import SessionLocal
-    from app.services.puzzle_cache import ensure_weekly_cache, get_current_week_key
-    from app.models.puzzle import Puzzle
-    from app.models.cache_meta import PuzzleCacheMeta
+    """Ensure puzzle cache is populated (runs in background thread)."""
+    import threading
+    import time
 
-    db = SessionLocal()
-    try:
-        week_key = get_current_week_key()
+    def _generate():
+        from app.database import SessionLocal
+        from app.services.puzzle_cache import ensure_weekly_cache, get_current_week_key
+        from app.models.puzzle import Puzzle
+        from app.models.cache_meta import PuzzleCacheMeta
 
-        # One-time migration: Clear old puzzles that don't have real clues
-        # Check if any puzzle has generic clues (indicates old data)
-        old_puzzle = db.query(Puzzle).filter(
-            Puzzle.clues_across.like('%Garden bloom%')  # Old generic clue
-        ).first()
+        # Wait a moment for app to fully start
+        time.sleep(2)
 
-        if old_puzzle:
-            logger.info("Detected old puzzles with generic clues - clearing for regeneration...")
-            db.query(Puzzle).delete()
-            db.query(PuzzleCacheMeta).delete()
-            db.commit()
-            logger.info("Cleared old puzzle data")
+        db = SessionLocal()
+        try:
+            week_key = get_current_week_key()
 
-        # Check if puzzles already exist
-        existing = db.query(Puzzle).filter(Puzzle.week_key == week_key).count()
-        if existing >= 7:
-            logger.info(f"Puzzles already exist for {week_key} ({existing} puzzles)")
-            return
+            # One-time migration: Clear old puzzles that don't have real clues
+            old_puzzle = db.query(Puzzle).filter(
+                Puzzle.clues_across.like('%Garden bloom%')
+            ).first()
 
-        logger.info(f"Generating puzzles for {week_key}...")
-        ensure_weekly_cache(db)
-        logger.info("Puzzle cache ready")
-    except Exception as e:
-        logger.error(f"Error ensuring puzzle cache: {e}")
-    finally:
-        db.close()
+            if old_puzzle:
+                logger.info("Detected old puzzles with generic clues - clearing...")
+                db.query(Puzzle).delete()
+                db.query(PuzzleCacheMeta).delete()
+                db.commit()
+                logger.info("Cleared old puzzle data")
+
+            # Check if puzzles already exist
+            existing = db.query(Puzzle).filter(Puzzle.week_key == week_key).count()
+            if existing >= 7:
+                logger.info(f"Puzzles already exist for {week_key} ({existing} puzzles)")
+                return
+
+            logger.info(f"Background: Generating puzzles for {week_key}...")
+            ensure_weekly_cache(db)
+            logger.info("Background: Puzzle cache ready!")
+        except Exception as e:
+            logger.error(f"Background: Error generating puzzles: {e}")
+            import traceback
+            traceback.print_exc()
+        finally:
+            db.close()
+
+    # Run in background thread (NOT daemon, so it completes even if main thread is idle)
+    thread = threading.Thread(target=_generate, daemon=False)
+    thread.start()
+    logger.info("Started background puzzle generation thread")
 
 
 @asynccontextmanager
